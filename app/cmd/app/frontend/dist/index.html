@@ -84,6 +84,16 @@
       const statusElement = document.getElementById("status");
       const urlInput = document.getElementById("comfyui-url");
 
+      async function loadSavedComfyUIURL() {
+        try {
+          const savedURL = await window.go.main.App.GetSavedComfyUIURL();
+          if (savedURL && typeof savedURL === "string") {
+            urlInput.value = savedURL;
+          }
+        } catch (_error) {
+        }
+      }
+
       function setStatus(message, type) {
         statusElement.textContent = message;
         statusElement.classList.remove("success", "error");
@@ -127,6 +137,8 @@
           setStatus("起動失敗: " + String(error), "error");
         }
       });
+
+      loadSavedComfyUIURL();
     </script>
   </body>
 </html>

@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/browser"
 
 	"simple-comfyui-gui/app/internal/comfyui"
+	"simple-comfyui-gui/app/internal/config"
 )
 
 type App struct {
@@ -40,7 +41,21 @@ func (application *App) CheckConnection(rawURL string) ConnectResult {
 		return ConnectResult{Success: false, Message: err.Error()}
 	}
 
+	err = config.Save(config.AppConfig{ComfyUIURL: normalizedURL})
+	if err != nil {
+		return ConnectResult{Success: true, Message: fmt.Sprintf("ComfyUIへの接続に成功しました（設定保存に失敗: %v）", err)}
+	}
+
 	return ConnectResult{Success: true, Message: "ComfyUIへの接続に成功しました"}
+}
+
+func (application *App) GetSavedComfyUIURL() string {
+	loaded, err := config.Load()
+	if err != nil {
+		return config.DefaultConfig().ComfyUIURL
+	}
+
+	return loaded.ComfyUIURL
 }
 
 func (application *App) OpenSimpleComfyUI() ConnectResult {
