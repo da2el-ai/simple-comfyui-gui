@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple ComfyUI GUI</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #f8fafc;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      label {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      input {
+        padding: 8px 10px;
+        font-size: 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+      }
+
+      button {
+        padding: 8px 12px;
+        font-size: 14px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+
+      .btn-connect {
+        background: #2563eb;
+        color: #fff;
+      }
+
+      .btn-open {
+        background: #0f766e;
+        color: #fff;
+      }
+
+      button:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+      }
+
+      .status {
+        min-height: 20px;
+        font-size: 13px;
+      }
+
+      .success {
+        color: #15803d;
+      }
+
+      .error {
+        color: #dc2626;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <label for="comfyui-url">ComfyUI URL</label>
+      <input id="comfyui-url" type="text" value="http://localhost:8188" />
+
+      <button id="connect" class="btn-connect">ComfyUIに接続</button>
+      <div id="status" class="status"></div>
+
+      <button id="open" class="btn-open" disabled>SimpleComfyUIを起動</button>
+    </main>
+
+    <script>
+      const connectButton = document.getElementById("connect");
+      const openButton = document.getElementById("open");
+      const statusElement = document.getElementById("status");
+      const urlInput = document.getElementById("comfyui-url");
+
+      function setStatus(message, type) {
+        statusElement.textContent = message;
+        statusElement.classList.remove("success", "error");
+        if (type) {
+          statusElement.classList.add(type);
+        }
+      }
+
+      connectButton.addEventListener("click", async () => {
+        connectButton.disabled = true;
+        setStatus("", null);
+
+        try {
+          const result = await window.go.main.App.CheckConnection(urlInput.value);
+          if (!result.success) {
+            openButton.disabled = true;
+            setStatus("接続失敗: " + result.message, "error");
+            return;
+          }
+
+          openButton.disabled = false;
+          setStatus(result.message, "success");
+        } catch (error) {
+          openButton.disabled = true;
+          setStatus("接続失敗: " + String(error), "error");
+        } finally {
+          connectButton.disabled = false;
+        }
+      });
+
+      openButton.addEventListener("click", async () => {
+        try {
+          const result = await window.go.main.App.OpenSimpleComfyUI();
+          if (!result.success) {
+            setStatus(result.message, "error");
+            return;
+          }
+
+          setStatus(result.message, "success");
+        } catch (error) {
+          setStatus("起動失敗: " + String(error), "error");
+        }
+      });
+    </script>
+  </body>
+</html>

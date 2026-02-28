@@ -16,7 +16,7 @@ tidy:
 
 build:
 	mkdir -p ../runtime/bin
-	$(GO) build -o ../runtime/bin/app ./cmd/app
+	CGO_LDFLAGS="-framework UniformTypeIdentifiers" $(GO) build -tags production -o ../runtime/bin/app ./cmd/app
 
 clean:
 	rm -rf ../runtime/bin
