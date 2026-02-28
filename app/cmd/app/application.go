@@ -8,11 +8,14 @@ import (
 
 	"simple-comfyui-gui/app/internal/comfyui"
 	"simple-comfyui-gui/app/internal/config"
+	"simple-comfyui-gui/app/internal/server"
 )
 
 type App struct {
-	ctx         context.Context
-	frontendURL string
+	ctx            context.Context
+	frontendURL    string
+	staticServer   *server.StaticServer
+	serverStartErr error
 }
 
 type ConnectResult struct {
@@ -22,12 +25,28 @@ type ConnectResult struct {
 
 func NewApp() *App {
 	return &App{
-		frontendURL: "http://127.0.0.1:3000",
+		staticServer: server.NewStaticServer(),
 	}
 }
 
 func (application *App) startup(ctx context.Context) {
 	application.ctx = ctx
+
+	err := application.staticServer.Start()
+	if err != nil {
+		application.serverStartErr = err
+		return
+	}
+
+	application.frontendURL = application.staticServer.URL()
+}
+
+func (application *App) shutdown(_ context.Context) {
+	if application.staticServer == nil {
+		return
+	}
+
+	_ = application.staticServer.Stop()
 }
 
 func (application *App) CheckConnection(rawURL string) ConnectResult {
@@ -59,6 +78,14 @@ func (application *App) GetSavedComfyUIURL() string {
 }
 
 func (application *App) OpenSimpleComfyUI() ConnectResult {
+	if application.serverStartErr != nil {
+		return ConnectResult{Success: false, Message: fmt.Sprintf("Webサーバー起動に失敗しました: %v", application.serverStartErr)}
+	}
+
+	if application.frontendURL == "" {
+		return ConnectResult{Success: false, Message: "WebサーバーURLが未設定です"}
+	}
+
 	if err := browser.OpenURL(application.frontendURL); err != nil {
 		return ConnectResult{Success: false, Message: fmt.Sprintf("ブラウザ起動に失敗しました: %v", err)}
 	}

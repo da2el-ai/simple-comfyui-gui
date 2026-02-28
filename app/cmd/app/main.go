@@ -22,7 +22,8 @@ func main() {
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		OnStartup: application.startup,
+		OnStartup:  application.startup,
+		OnShutdown: application.shutdown,
 		Bind: []interface{}{
 			application,
 		},
