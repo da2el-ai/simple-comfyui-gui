@@ -1,12 +1,17 @@
 package server
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
+
+	"simple-comfyui-gui/app/internal/config"
 )
 
 const defaultPort = 3000
@@ -16,6 +21,8 @@ type StaticServer struct {
 	listener    net.Listener
 	frontendDir string
 	workflowDir string
+	localURL    string
+	lanURL      string
 }
 
 func NewStaticServer() *StaticServer {
@@ -32,18 +39,30 @@ func (staticServer *StaticServer) Start() error {
 	staticServer.workflowDir = workflowDir
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("/api/comfyui_endpoint", staticServer.handleComfyUIEndpoint)
+	mux.HandleFunc("/api/workflows", staticServer.handleWorkflows)
 	mux.Handle("/workflow/", http.StripPrefix("/workflow/", http.FileServer(http.Dir(staticServer.workflowDir))))
 	mux.Handle("/", newFrontendHandler(staticServer.frontendDir))
 
-	listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", defaultPort))
+	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", defaultPort))
 	if err != nil {
-		listener, err = net.Listen("tcp", "127.0.0.1:0")
+		listener, err = net.Listen("tcp", "0.0.0.0:0")
 		if err != nil {
 			return err
 		}
 	}
 
 	staticServer.listener = listener
+	tcpAddress, ok := listener.Addr().(*net.TCPAddr)
+	if ok {
+		staticServer.localURL = fmt.Sprintf("http://127.0.0.1:%d", tcpAddress.Port)
+		localIP := detectLocalIPv4()
+		if localIP != "" {
+			staticServer.lanURL = fmt.Sprintf("http://%s:%d", localIP, tcpAddress.Port)
+		} else {
+			staticServer.lanURL = staticServer.localURL
+		}
+	}
 	staticServer.server = &http.Server{Handler: mux}
 
 	go func() {
@@ -62,11 +81,15 @@ func (staticServer *StaticServer) Stop() error {
 }
 
 func (staticServer *StaticServer) URL() string {
-	if staticServer.listener == nil {
-		return ""
-	}
+	return staticServer.localURL
+}
 
-	return fmt.Sprintf("http://%s", staticServer.listener.Addr().String())
+func (staticServer *StaticServer) LocalURL() string {
+	return staticServer.localURL
+}
+
+func (staticServer *StaticServer) LANURL() string {
+	return staticServer.lanURL
 }
 
 func newFrontendHandler(frontendDir string) http.Handler {
@@ -120,4 +143,83 @@ func directoryExists(path string) bool {
 	}
 
 	return stat.IsDir()
+}
+
+func (staticServer *StaticServer) handleComfyUIEndpoint(response http.ResponseWriter, _ *http.Request) {
+	loadedConfig, err := config.Load()
+	if err != nil {
+		loadedConfig = config.DefaultConfig()
+	}
+
+	writeJSON(response, http.StatusOK, map[string]string{
+		"endpoint": loadedConfig.ComfyUIURL,
+	})
+}
+
+func (staticServer *StaticServer) handleWorkflows(response http.ResponseWriter, _ *http.Request) {
+	entries, err := os.ReadDir(staticServer.workflowDir)
+	if err != nil {
+		writeJSON(response, http.StatusInternalServerError, map[string]string{
+			"error": "workflow一覧の取得に失敗しました",
+		})
+		return
+	}
+
+	workflowNames := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		name := entry.Name()
+		if filepath.Ext(name) != ".json" {
+			continue
+		}
+
+		workflowNames = append(workflowNames, strings.TrimSuffix(name, ".json"))
+	}
+
+	sort.Strings(workflowNames)
+	writeJSON(response, http.StatusOK, workflowNames)
+}
+
+func writeJSON(response http.ResponseWriter, statusCode int, payload any) {
+	response.Header().Set("Content-Type", "application/json")
+	response.WriteHeader(statusCode)
+
+	_ = json.NewEncoder(response).Encode(payload)
+}
+
+func detectLocalIPv4() string {
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return ""
+	}
+
+	for _, networkInterface := range interfaces {
+		if (networkInterface.Flags&net.FlagUp) == 0 || (networkInterface.Flags&net.FlagLoopback) != 0 {
+			continue
+		}
+
+		addresses, err := networkInterface.Addrs()
+		if err != nil {
+			continue
+		}
+
+		for _, address := range addresses {
+			ipNet, ok := address.(*net.IPNet)
+			if !ok {
+				continue
+			}
+
+			ip := ipNet.IP.To4()
+			if ip == nil {
+				continue
+			}
+
+			return ip.String()
+		}
+	}
+
+	return ""
 }

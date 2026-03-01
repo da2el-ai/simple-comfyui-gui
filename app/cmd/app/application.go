@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 
 	"github.com/pkg/browser"
+	qrcode "github.com/skip2/go-qrcode"
 
 	"simple-comfyui-gui/app/internal/comfyui"
 	"simple-comfyui-gui/app/internal/config"
@@ -14,6 +16,7 @@ import (
 type App struct {
 	ctx            context.Context
 	frontendURL    string
+	lanFrontendURL string
 	staticServer   *server.StaticServer
 	serverStartErr error
 }
@@ -21,6 +24,13 @@ type App struct {
 type ConnectResult struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
+}
+
+type QRCodeResult struct {
+	Success       bool   `json:"success"`
+	Message       string `json:"message"`
+	AccessURL     string `json:"accessUrl"`
+	QRCodeDataURL string `json:"qrCodeDataUrl"`
 }
 
 func NewApp() *App {
@@ -39,6 +49,7 @@ func (application *App) startup(ctx context.Context) {
 	}
 
 	application.frontendURL = application.staticServer.URL()
+	application.lanFrontendURL = application.staticServer.LANURL()
 }
 
 func (application *App) shutdown(_ context.Context) {
@@ -91,4 +102,32 @@ func (application *App) OpenSimpleComfyUI() ConnectResult {
 	}
 
 	return ConnectResult{Success: true, Message: "SimpleComfyUIを起動しました"}
+}
+
+func (application *App) GetQRCode() QRCodeResult {
+	if application.serverStartErr != nil {
+		return QRCodeResult{Success: false, Message: fmt.Sprintf("Webサーバー起動に失敗しました: %v", application.serverStartErr)}
+	}
+
+	targetURL := application.lanFrontendURL
+	if targetURL == "" {
+		targetURL = application.frontendURL
+	}
+
+	if targetURL == "" {
+		return QRCodeResult{Success: false, Message: "QRコード生成対象のURLが未設定です"}
+	}
+
+	pngBytes, err := qrcode.Encode(targetURL, qrcode.Medium, 256)
+	if err != nil {
+		return QRCodeResult{Success: false, Message: fmt.Sprintf("QRコード生成に失敗しました: %v", err)}
+	}
+
+	encoded := base64.StdEncoding.EncodeToString(pngBytes)
+	return QRCodeResult{
+		Success:       true,
+		Message:       "QRコードを生成しました",
+		AccessURL:     targetURL,
+		QRCodeDataURL: "data:image/png;base64," + encoded,
+	}
 }

@@ -58,6 +58,27 @@
         font-size: 13px;
       }
 
+      .qr-section {
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+        padding-top: 8px;
+      }
+
+      .qr-image {
+        width: 180px;
+        height: 180px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .qr-url {
+        font-size: 12px;
+        color: #334155;
+        word-break: break-all;
+      }
+
       .success {
         color: #15803d;
       }
@@ -76,6 +97,12 @@
       <div id="status" class="status"></div>
 
       <button id="open" class="btn-open" disabled>SimpleComfyUIを起動</button>
+
+      <section id="qr-section" class="qr-section">
+        <label>QRコード</label>
+        <img id="qr-image" class="qr-image" alt="QRコード" />
+        <div id="qr-url" class="qr-url"></div>
+      </section>
     </main>
 
     <script>
@@ -83,6 +110,18 @@
       const openButton = document.getElementById("open");
       const statusElement = document.getElementById("status");
       const urlInput = document.getElementById("comfyui-url");
+      const qrSection = document.getElementById("qr-section");
+      const qrImage = document.getElementById("qr-image");
+      const qrURL = document.getElementById("qr-url");
+      const defaultConnectButtonLabel = "ComfyUIに接続";
+
+      let connectedURL = "";
+
+      function setConnecting(isConnecting) {
+        connectButton.disabled = isConnecting;
+        urlInput.disabled = isConnecting;
+        connectButton.textContent = isConnecting ? "接続中..." : defaultConnectButtonLabel;
+      }
 
       async function loadSavedComfyUIURL() {
         try {
@@ -102,25 +141,69 @@
         }
       }
 
-      connectButton.addEventListener("click", async () => {
-        connectButton.disabled = true;
-        setStatus("", null);
+      function hideQRCode() {
+        qrSection.style.display = "none";
+        qrImage.removeAttribute("src");
+        qrURL.textContent = "";
+      }
+
+      async function showQRCode() {
+        const result = await window.go.main.App.GetQRCode();
+        if (!result.success) {
+          hideQRCode();
+          setStatus(result.message, "error");
+          return;
+        }
+
+        qrImage.src = result.qrCodeDataUrl;
+        qrURL.textContent = result.accessUrl;
+        qrSection.style.display = "flex";
+      }
+
+      async function connectComfyUI(options = { auto: false }) {
+        const isAuto = Boolean(options.auto);
+        setConnecting(true);
+
+        if (isAuto) {
+          setStatus("保存済みURLで接続を確認しています...", null);
+        } else {
+          setStatus("", null);
+        }
 
         try {
           const result = await window.go.main.App.CheckConnection(urlInput.value);
           if (!result.success) {
+            connectedURL = "";
             openButton.disabled = true;
+            hideQRCode();
             setStatus("接続失敗: " + result.message, "error");
             return;
           }
 
+          connectedURL = urlInput.value.trim();
           openButton.disabled = false;
           setStatus(result.message, "success");
+          await showQRCode();
         } catch (error) {
+          connectedURL = "";
           openButton.disabled = true;
+          hideQRCode();
           setStatus("接続失敗: " + String(error), "error");
         } finally {
-          connectButton.disabled = false;
+          setConnecting(false);
+        }
+      }
+
+      connectButton.addEventListener("click", async () => {
+        await connectComfyUI();
+      });
+
+      urlInput.addEventListener("input", () => {
+        const currentURL = urlInput.value.trim();
+        if (connectedURL && currentURL !== connectedURL) {
+          openButton.disabled = true;
+          hideQRCode();
+          setStatus("URLが変更されました。再接続してください。", "error");
         }
       });
 
@@ -138,7 +221,11 @@
         }
       });
 
-      loadSavedComfyUIURL();
+      (async () => {
+        hideQRCode();
+        await loadSavedComfyUIURL();
+        await connectComfyUI({ auto: true });
+      })();
     </script>
   </body>
 </html>
