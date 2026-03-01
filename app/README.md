@@ -1,12 +1,12 @@
-# Go アプリ開発環境
+# Go + Wails 開発運用
 
-このディレクトリは Go + Fyne バックエンド開発用の土台です。
-現時点ではソースコード（`.go`）はまだ配置していません。
+このディレクトリは `simple-comfyui-gui` の Go + Wails 実装です。
 
 ## 前提
 
 - Go 1.24 以上
-- `make`（任意）
+- `make`
+- macOS の場合: Xcode Command Line Tools
 
 ## 初期確認
 
@@ -15,14 +15,77 @@ cd app
 make env-check
 ```
 
-## よく使うコマンド
+## 開発（Wails）
+
+```bash
+cd app
+make wails-dev
+```
+
+- Wails の開発モードで起動します
+- `make wails-dev` は内部で `go run github.com/wailsapp/wails/v2/cmd/wails@v2.11.0 dev` を実行します
+
+## 本番ビルド（現行運用）
+
+```bash
+cd app
+make build
+```
+
+- 出力先: `../runtime/app`
+- ビルド時に `production` タグを付与します
+
+## 配布向けビルド（推奨）
+
+配布用は `make wails-build` を使用してください。
+
+```bash
+cd app
+make wails-build
+```
+
+- `make build` は単体バイナリ生成用（ターミナル起動向け）です
+- 配布用途では Wails 標準の成果物（macOS なら `.app`）を使用します
+- 出力先（macOS）: `runtime/*.app`
+
+### 起動方法（macOS）
+
+1. `make wails-build` 実行後、生成された `.app` を Finder で開く
+2. またはターミナルから `open <生成されたappのパス>` で起動する
+
+配布時の推奨配置（同階層）:
+
+```text
+配布フォルダ/
+	├── Simple ComfyUI GUI.app
+	├── frontend/
+	└── workflow/
+```
+
+※ `.app` は同階層の `frontend/` と `workflow/` を探索して起動します
+
+例:
+
+```bash
+open ../runtime/Simple\ ComfyUI\ GUI.app
+```
+
+※ ビルド内部では `cmd/app/build` が一時的に生成されますが、`make wails-build` 実行後に自動削除されます
+
+## 実行
+
+```bash
+cd app
+make run
+```
+
+- `make run` は `../runtime/app` を実行します
+
+## 補助コマンド
 
 ```bash
 cd app
 make fmt
 make test
 make tidy
-make build
 ```
-
-`make build` は `../runtime/bin/app` を出力先にします。

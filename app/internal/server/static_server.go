@@ -113,24 +113,29 @@ func resolveStaticDirs() (string, string, error) {
 
 	executableDir := filepath.Dir(executablePath)
 
-	candidates := []string{
-		filepath.Clean(filepath.Join(executableDir, "..")),
-		filepath.Clean(filepath.Join(executableDir, "..", "..")),
-		filepath.Clean(filepath.Join(executableDir, "runtime")),
-		filepath.Clean(filepath.Join(executableDir, "..", "runtime")),
-		filepath.Clean(filepath.Join(executableDir, "..", "..", "runtime")),
-	}
+	checkedPaths := make([]string, 0)
+	for depth := 0; depth <= 8; depth++ {
+		ancestorDir := executableDir
+		for i := 0; i < depth; i++ {
+			ancestorDir = filepath.Dir(ancestorDir)
+		}
 
-	for _, baseDir := range candidates {
-		frontendDir := filepath.Join(baseDir, "frontend")
-		workflowDir := filepath.Join(baseDir, "workflow")
+		directFrontend := filepath.Join(ancestorDir, "frontend")
+		directWorkflow := filepath.Join(ancestorDir, "workflow")
+		checkedPaths = append(checkedPaths, directFrontend, directWorkflow)
+		if directoryExists(directFrontend) && directoryExists(directWorkflow) {
+			return directFrontend, directWorkflow, nil
+		}
 
-		if directoryExists(frontendDir) && directoryExists(workflowDir) {
-			return frontendDir, workflowDir, nil
+		runtimeFrontend := filepath.Join(ancestorDir, "runtime", "frontend")
+		runtimeWorkflow := filepath.Join(ancestorDir, "runtime", "workflow")
+		checkedPaths = append(checkedPaths, runtimeFrontend, runtimeWorkflow)
+		if directoryExists(runtimeFrontend) && directoryExists(runtimeWorkflow) {
+			return runtimeFrontend, runtimeWorkflow, nil
 		}
 	}
 
-	return "", "", errors.New("runtime/frontend と runtime/workflow が見つかりません")
+	return "", "", errors.New("frontend/workflow の配置が見つかりません。探索パス: " + strings.Join(checkedPaths, ", "))
 }
 
 func directoryExists(path string) bool {
