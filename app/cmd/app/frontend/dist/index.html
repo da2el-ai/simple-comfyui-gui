@@ -65,9 +65,21 @@
         padding-top: 8px;
       }
 
+      .qr-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .qr-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
       .qr-image {
-        width: 180px;
-        height: 180px;
+        width: 120px;
+        height: 120px;
         border: 1px solid #cbd5e1;
         border-radius: 8px;
         background: #fff;
@@ -100,8 +112,7 @@
 
       <section id="qr-section" class="qr-section">
         <label>QRコード</label>
-        <img id="qr-image" class="qr-image" alt="QRコード" />
-        <div id="qr-url" class="qr-url"></div>
+        <div id="qr-list" class="qr-list"></div>
       </section>
     </main>
 
@@ -111,8 +122,7 @@
       const statusElement = document.getElementById("status");
       const urlInput = document.getElementById("comfyui-url");
       const qrSection = document.getElementById("qr-section");
-      const qrImage = document.getElementById("qr-image");
-      const qrURL = document.getElementById("qr-url");
+      const qrList = document.getElementById("qr-list");
       const defaultConnectButtonLabel = "ComfyUIに接続";
 
       let connectedURL = "";
@@ -143,20 +153,41 @@
 
       function hideQRCode() {
         qrSection.style.display = "none";
-        qrImage.removeAttribute("src");
-        qrURL.textContent = "";
+        qrList.innerHTML = "";
       }
 
       async function showQRCode() {
-        const result = await window.go.main.App.GetQRCode();
+        const result = await window.go.main.App.GetQRCodes();
         if (!result.success) {
           hideQRCode();
           setStatus(result.message, "error");
           return;
         }
 
-        qrImage.src = result.qrCodeDataUrl;
-        qrURL.textContent = result.accessUrl;
+        if (!result.items || result.items.length === 0) {
+          hideQRCode();
+          return;
+        }
+
+        qrList.innerHTML = "";
+        for (const item of result.items) {
+          const rowElement = document.createElement("div");
+          rowElement.className = "qr-row";
+
+          const imageElement = document.createElement("img");
+          imageElement.className = "qr-image";
+          imageElement.alt = "QRコード";
+          imageElement.src = item.qrCodeDataUrl;
+
+          const urlElement = document.createElement("div");
+          urlElement.className = "qr-url";
+          urlElement.textContent = item.accessUrl;
+
+          rowElement.appendChild(imageElement);
+          rowElement.appendChild(urlElement);
+          qrList.appendChild(rowElement);
+        }
+
         qrSection.style.display = "flex";
       }
 

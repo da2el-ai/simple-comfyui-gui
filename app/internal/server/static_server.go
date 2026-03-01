@@ -22,7 +22,7 @@ type StaticServer struct {
 	frontendDir string
 	workflowDir string
 	localURL    string
-	lanURL      string
+	accessURLs  []string
 }
 
 func NewStaticServer() *StaticServer {
@@ -56,12 +56,7 @@ func (staticServer *StaticServer) Start() error {
 	tcpAddress, ok := listener.Addr().(*net.TCPAddr)
 	if ok {
 		staticServer.localURL = fmt.Sprintf("http://127.0.0.1:%d", tcpAddress.Port)
-		localIP := detectLocalIPv4()
-		if localIP != "" {
-			staticServer.lanURL = fmt.Sprintf("http://%s:%d", localIP, tcpAddress.Port)
-		} else {
-			staticServer.lanURL = staticServer.localURL
-		}
+		staticServer.accessURLs = buildAccessURLs(tcpAddress.Port)
 	}
 	staticServer.server = &http.Server{Handler: mux}
 
@@ -88,8 +83,10 @@ func (staticServer *StaticServer) LocalURL() string {
 	return staticServer.localURL
 }
 
-func (staticServer *StaticServer) LANURL() string {
-	return staticServer.lanURL
+func (staticServer *StaticServer) AccessURLs() []string {
+	cloned := make([]string, len(staticServer.accessURLs))
+	copy(cloned, staticServer.accessURLs)
+	return cloned
 }
 
 func newFrontendHandler(frontendDir string) http.Handler {
@@ -190,11 +187,28 @@ func writeJSON(response http.ResponseWriter, statusCode int, payload any) {
 	_ = json.NewEncoder(response).Encode(payload)
 }
 
-func detectLocalIPv4() string {
+func buildAccessURLs(port int) []string {
+	urls := []string{}
+	ipAddresses := collectCandidateIPv4s()
+	for _, ipAddress := range ipAddresses {
+		urls = append(urls, fmt.Sprintf("http://%s:%d", ipAddress, port))
+	}
+
+	return dedupeStrings(urls)
+}
+
+func collectCandidateIPv4s() []string {
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		return ""
+		return []string{}
 	}
+
+	type ipCandidate struct {
+		ip    string
+		score int
+	}
+
+	candidates := make([]ipCandidate, 0)
 
 	for _, networkInterface := range interfaces {
 		if (networkInterface.Flags&net.FlagUp) == 0 || (networkInterface.Flags&net.FlagLoopback) != 0 {
@@ -217,9 +231,92 @@ func detectLocalIPv4() string {
 				continue
 			}
 
-			return ip.String()
+			if !isTargetIP(ip, networkInterface.Name) {
+				continue
+			}
+
+			score := 2
+			if strings.HasPrefix(networkInterface.Name, "en") {
+				score = 0
+			} else if strings.HasPrefix(networkInterface.Name, "utun") {
+				score = 1
+			}
+
+			candidates = append(candidates, ipCandidate{ip: ip.String(), score: score})
 		}
 	}
 
-	return ""
+	sort.SliceStable(candidates, func(left int, right int) bool {
+		if candidates[left].score != candidates[right].score {
+			return candidates[left].score < candidates[right].score
+		}
+		return candidates[left].ip < candidates[right].ip
+	})
+
+	result := make([]string, 0, len(candidates))
+	for _, candidate := range candidates {
+		result = append(result, candidate.ip)
+	}
+
+	return dedupeStrings(result)
+}
+
+func isTargetIP(ip net.IP, interfaceName string) bool {
+	if strings.HasPrefix(interfaceName, "utun") {
+		return isCarrierGradeNAT(ip) || isPrivateIP(ip)
+	}
+
+	if strings.HasPrefix(interfaceName, "en") {
+		return isPrivateIP(ip)
+	}
+
+	return false
+}
+
+func isPrivateIP(ip net.IP) bool {
+	if ip == nil {
+		return false
+	}
+
+	first := ip[0]
+	second := ip[1]
+
+	if first == 10 {
+		return true
+	}
+
+	if first == 172 && second >= 16 && second <= 31 {
+		return true
+	}
+
+	if first == 192 && second == 168 {
+		return true
+	}
+
+	return false
+}
+
+func isCarrierGradeNAT(ip net.IP) bool {
+	if ip == nil {
+		return false
+	}
+
+	first := ip[0]
+	second := ip[1]
+	return first == 100 && second >= 64 && second <= 127
+}
+
+func dedupeStrings(values []string) []string {
+	seen := map[string]bool{}
+	result := make([]string, 0, len(values))
+
+	for _, value := range values {
+		if value == "" || seen[value] {
+			continue
+		}
+		seen[value] = true
+		result = append(result, value)
+	}
+
+	return result
 }

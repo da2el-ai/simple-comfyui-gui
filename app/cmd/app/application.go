@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"net"
+	"net/url"
 
 	"github.com/pkg/browser"
 	qrcode "github.com/skip2/go-qrcode"
@@ -16,7 +18,7 @@ import (
 type App struct {
 	ctx            context.Context
 	frontendURL    string
-	lanFrontendURL string
+	accessURLs     []string
 	staticServer   *server.StaticServer
 	serverStartErr error
 }
@@ -31,6 +33,12 @@ type QRCodeResult struct {
 	Message       string `json:"message"`
 	AccessURL     string `json:"accessUrl"`
 	QRCodeDataURL string `json:"qrCodeDataUrl"`
+}
+
+type QRCodeListResult struct {
+	Success bool           `json:"success"`
+	Message string         `json:"message"`
+	Items   []QRCodeResult `json:"items"`
 }
 
 func NewApp() *App {
@@ -49,7 +57,7 @@ func (application *App) startup(ctx context.Context) {
 	}
 
 	application.frontendURL = application.staticServer.URL()
-	application.lanFrontendURL = application.staticServer.LANURL()
+	application.accessURLs = application.staticServer.AccessURLs()
 }
 
 func (application *App) shutdown(_ context.Context) {
@@ -105,29 +113,92 @@ func (application *App) OpenSimpleComfyUI() ConnectResult {
 }
 
 func (application *App) GetQRCode() QRCodeResult {
+	listResult := application.GetQRCodes()
+	if !listResult.Success {
+		return QRCodeResult{Success: false, Message: listResult.Message}
+	}
+
+	if len(listResult.Items) == 0 {
+		return QRCodeResult{Success: false, Message: "QRコード生成対象のURLが見つかりません"}
+	}
+
+	first := listResult.Items[0]
+	first.Success = true
+	first.Message = "QRコードを生成しました"
+	return first
+}
+
+func (application *App) GetQRCodes() QRCodeListResult {
 	if application.serverStartErr != nil {
-		return QRCodeResult{Success: false, Message: fmt.Sprintf("Webサーバー起動に失敗しました: %v", application.serverStartErr)}
+		return QRCodeListResult{Success: false, Message: fmt.Sprintf("Webサーバー起動に失敗しました: %v", application.serverStartErr)}
 	}
 
-	targetURL := application.lanFrontendURL
-	if targetURL == "" {
-		targetURL = application.frontendURL
+	targetURLs := make([]string, 0, len(application.accessURLs)+1)
+	targetURLs = append(targetURLs, application.accessURLs...)
+	if application.frontendURL != "" {
+		targetURLs = append(targetURLs, application.frontendURL)
+	}
+	targetURLs = dedupeURLs(targetURLs)
+
+	if len(targetURLs) == 0 {
+		return QRCodeListResult{Success: false, Message: "QRコード生成対象のURLが未設定です"}
 	}
 
-	if targetURL == "" {
-		return QRCodeResult{Success: false, Message: "QRコード生成対象のURLが未設定です"}
+	items := make([]QRCodeResult, 0, len(targetURLs))
+	for _, targetURL := range targetURLs {
+		pngBytes, err := qrcode.Encode(targetURL, qrcode.Medium, 256)
+		if err != nil {
+			return QRCodeListResult{Success: false, Message: fmt.Sprintf("QRコード生成に失敗しました: %v", err)}
+		}
+
+		encoded := base64.StdEncoding.EncodeToString(pngBytes)
+		items = append(items, QRCodeResult{
+			AccessURL:     targetURL,
+			QRCodeDataURL: "data:image/png;base64," + encoded,
+		})
 	}
 
-	pngBytes, err := qrcode.Encode(targetURL, qrcode.Medium, 256)
+	return QRCodeListResult{
+		Success: true,
+		Message: "QRコードを生成しました",
+		Items:   items,
+	}
+}
+
+func dedupeURLs(urls []string) []string {
+	seen := map[string]bool{}
+	result := make([]string, 0, len(urls))
+
+	for _, url := range urls {
+		if url == "" || seen[url] || isLoopbackURL(url) {
+			continue
+		}
+		seen[url] = true
+		result = append(result, url)
+	}
+
+	return result
+}
+
+func isLoopbackURL(rawURL string) bool {
+	parsedURL, err := url.Parse(rawURL)
 	if err != nil {
-		return QRCodeResult{Success: false, Message: fmt.Sprintf("QRコード生成に失敗しました: %v", err)}
+		return false
 	}
 
-	encoded := base64.StdEncoding.EncodeToString(pngBytes)
-	return QRCodeResult{
-		Success:       true,
-		Message:       "QRコードを生成しました",
-		AccessURL:     targetURL,
-		QRCodeDataURL: "data:image/png;base64," + encoded,
+	hostname := parsedURL.Hostname()
+	if hostname == "" {
+		return false
 	}
+
+	if hostname == "localhost" {
+		return true
+	}
+
+	ip := net.ParseIP(hostname)
+	if ip == nil {
+		return false
+	}
+
+	return ip.IsLoopback()
 }
