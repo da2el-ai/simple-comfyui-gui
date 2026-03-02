@@ -21,6 +21,7 @@ type StaticServer struct {
 	listener    net.Listener
 	frontendDir string
 	workflowDir string
+	tagsFile    string
 	localURL    string
 	accessURLs  []string
 }
@@ -30,17 +31,19 @@ func NewStaticServer() *StaticServer {
 }
 
 func (staticServer *StaticServer) Start() error {
-	frontendDir, workflowDir, err := resolveStaticDirs()
+	frontendDir, workflowDir, tagsFile, err := resolveStaticDirs()
 	if err != nil {
 		return err
 	}
 
 	staticServer.frontendDir = frontendDir
 	staticServer.workflowDir = workflowDir
+	staticServer.tagsFile = tagsFile
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/comfyui_endpoint", staticServer.handleComfyUIEndpoint)
 	mux.HandleFunc("/api/workflows", staticServer.handleWorkflows)
+	mux.HandleFunc("/api/tags", staticServer.handleTags)
 	mux.Handle("/workflow/", http.StripPrefix("/workflow/", http.FileServer(http.Dir(staticServer.workflowDir))))
 	mux.Handle("/", newFrontendHandler(staticServer.frontendDir))
 
@@ -105,10 +108,10 @@ func newFrontendHandler(frontendDir string) http.Handler {
 	})
 }
 
-func resolveStaticDirs() (string, string, error) {
+func resolveStaticDirs() (string, string, string, error) {
 	executablePath, err := os.Executable()
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	executableDir := filepath.Dir(executablePath)
@@ -124,18 +127,32 @@ func resolveStaticDirs() (string, string, error) {
 		directWorkflow := filepath.Join(ancestorDir, "workflow")
 		checkedPaths = append(checkedPaths, directFrontend, directWorkflow)
 		if directoryExists(directFrontend) && directoryExists(directWorkflow) {
-			return directFrontend, directWorkflow, nil
+			return directFrontend, directWorkflow, resolveTagsFile(ancestorDir), nil
 		}
 
 		runtimeFrontend := filepath.Join(ancestorDir, "runtime", "frontend")
 		runtimeWorkflow := filepath.Join(ancestorDir, "runtime", "workflow")
 		checkedPaths = append(checkedPaths, runtimeFrontend, runtimeWorkflow)
 		if directoryExists(runtimeFrontend) && directoryExists(runtimeWorkflow) {
-			return runtimeFrontend, runtimeWorkflow, nil
+			return runtimeFrontend, runtimeWorkflow, resolveTagsFile(ancestorDir), nil
 		}
 	}
 
-	return "", "", errors.New("frontend/workflow の配置が見つかりません。探索パス: " + strings.Join(checkedPaths, ", "))
+	return "", "", "", errors.New("frontend/workflow の配置が見つかりません。探索パス: " + strings.Join(checkedPaths, ", "))
+}
+
+func resolveTagsFile(ancestorDir string) string {
+	directTagsFile := filepath.Join(ancestorDir, "tags", "autocomplete.csv")
+	if fileExists(directTagsFile) {
+		return directTagsFile
+	}
+
+	runtimeTagsFile := filepath.Join(ancestorDir, "runtime", "tags", "autocomplete.csv")
+	if fileExists(runtimeTagsFile) {
+		return runtimeTagsFile
+	}
+
+	return ""
 }
 
 func directoryExists(path string) bool {
@@ -145,6 +162,15 @@ func directoryExists(path string) bool {
 	}
 
 	return stat.IsDir()
+}
+
+func fileExists(path string) bool {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+
+	return !stat.IsDir()
 }
 
 func (staticServer *StaticServer) handleComfyUIEndpoint(response http.ResponseWriter, _ *http.Request) {
@@ -183,6 +209,18 @@ func (staticServer *StaticServer) handleWorkflows(response http.ResponseWriter, 
 
 	sort.Strings(workflowNames)
 	writeJSON(response, http.StatusOK, workflowNames)
+}
+
+func (staticServer *StaticServer) handleTags(response http.ResponseWriter, request *http.Request) {
+	if staticServer.tagsFile == "" || !fileExists(staticServer.tagsFile) {
+		writeJSON(response, http.StatusNotFound, map[string]string{
+			"error": "tagsファイルが見つかりません",
+		})
+		return
+	}
+
+	response.Header().Set("Content-Type", "text/csv; charset=utf-8")
+	http.ServeFile(response, request, staticServer.tagsFile)
 }
 
 func writeJSON(response http.ResponseWriter, statusCode int, payload any) {
