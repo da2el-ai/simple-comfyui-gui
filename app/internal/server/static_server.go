@@ -278,12 +278,7 @@ func collectCandidateIPv4s() []string {
 				continue
 			}
 
-			score := 2
-			if strings.HasPrefix(networkInterface.Name, "en") {
-				score = 0
-			} else if strings.HasPrefix(networkInterface.Name, "utun") {
-				score = 1
-			}
+			score := interfaceScore(networkInterface.Name)
 
 			candidates = append(candidates, ipCandidate{ip: ip.String(), score: score})
 		}
@@ -305,15 +300,30 @@ func collectCandidateIPv4s() []string {
 }
 
 func isTargetIP(ip net.IP, interfaceName string) bool {
-	if strings.HasPrefix(interfaceName, "utun") {
+	if ip == nil {
+		return false
+	}
+
+	interfaceNameLower := strings.ToLower(interfaceName)
+	if strings.Contains(interfaceNameLower, "tailscale") || strings.HasPrefix(interfaceNameLower, "utun") {
 		return isCarrierGradeNAT(ip) || isPrivateIP(ip)
 	}
 
-	if strings.HasPrefix(interfaceName, "en") {
-		return isPrivateIP(ip)
+	return isPrivateIP(ip)
+}
+
+func interfaceScore(interfaceName string) int {
+	interfaceNameLower := strings.ToLower(interfaceName)
+
+	if strings.Contains(interfaceNameLower, "tailscale") || strings.HasPrefix(interfaceNameLower, "utun") {
+		return 0
 	}
 
-	return false
+	if strings.HasPrefix(interfaceNameLower, "en") || strings.Contains(interfaceNameLower, "wi-fi") || strings.Contains(interfaceNameLower, "wifi") || strings.Contains(interfaceNameLower, "ethernet") {
+		return 1
+	}
+
+	return 2
 }
 
 func isPrivateIP(ip net.IP) bool {

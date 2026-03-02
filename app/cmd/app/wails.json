@@ -1,5 +1,5 @@
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
   "name": "Simple ComfyUI GUI",
-  "outputfilename": "app"
+  "outputfilename": "Simple ComfyUI GUI"
 }

@@ -2,3 +2,4 @@ AI_INSTRUCTION
 runtime
 frontend/dist
 frontend/node_modules
+.claude
