@@ -1,6 +1,9 @@
 import type {
   ComfyObjectInfo,
   ComfyUIEndpointResponse,
+  PromptHistory,
+  PromptResponse,
+  WorkflowData,
   WorkflowName,
   WorkflowsResponse
 } from '../types/api'
@@ -61,4 +64,40 @@ export async function fetchComfyObjectInfo(endpoint: string): Promise<ComfyObjec
     throw new Error(`ComfyUI object_info取得に失敗しました: ${response.status}`)
   }
   return (await response.json()) as ComfyObjectInfo
+}
+
+/** ワークフローJSONを取得する */
+export async function fetchWorkflowJson(workflowName: string): Promise<WorkflowData> {
+  const response = await fetchNoStore(`/workflow/${workflowName}.json`)
+  if (!response.ok) {
+    throw new Error(`workflow json取得に失敗しました: ${response.status}`)
+  }
+  return (await response.json()) as WorkflowData
+}
+
+/** ComfyUIへpromptを送信する */
+export async function submitPrompt(endpoint: string, prompt: WorkflowData): Promise<PromptResponse> {
+  const response = await fetch(`${endpoint}/prompt`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ prompt })
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`prompt送信に失敗しました: ${response.status} ${errorText}`)
+  }
+
+  return (await response.json()) as PromptResponse
+}
+
+/** ComfyUIの履歴を取得する */
+export async function fetchPromptHistory(endpoint: string, promptId: string): Promise<PromptHistory> {
+  const response = await fetch(`${endpoint}/history/${promptId}`, { cache: 'no-store' })
+  if (!response.ok) {
+    throw new Error(`history取得に失敗しました: ${response.status}`)
+  }
+  return (await response.json()) as PromptHistory
 }

@@ -35,3 +35,19 @@ export type WorkflowConfig = {
 }
 
 export type ComfyObjectInfo = Record<string, unknown>
+
+export type WorkflowNode = {
+  class_type?: string
+  _meta?: {
+    title?: string
+  }
+  inputs: Record<string, unknown>
+}
+
+export type WorkflowData = Record<string, WorkflowNode>
+
+export type PromptResponse = {
+  prompt_id: string
+}
+
+export type PromptHistory = Record<string, unknown>
