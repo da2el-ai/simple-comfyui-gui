@@ -59,6 +59,8 @@ cd frontend
 npm run build:runtime
 ```
 
+- `build:runtime` は Windows / macOS / Linux 共通で利用できます。
+
 このコマンドで実行される内容:
 
 1. `npm run build`

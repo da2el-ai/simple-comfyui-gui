@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "build:runtime": "npm run build && rm -rf ../runtime/frontend && mkdir -p ../runtime/frontend && cp -R dist/. ../runtime/frontend/",
+    "build:runtime": "npm run build && node -e \"const fs=require('fs');const path=require('path');const src=path.resolve('dist');const dest=path.resolve('../runtime/frontend');fs.rmSync(dest,{recursive:true,force:true});fs.mkdirSync(dest,{recursive:true});fs.cpSync(src,dest,{recursive:true});\"",
+    "build:runtime:win": "npm run build:runtime",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.vue",
     "format": "prettier --write .",

@@ -3,3 +3,4 @@ runtime
 frontend/dist
 frontend/node_modules
 .claude
+simple-comfyui
