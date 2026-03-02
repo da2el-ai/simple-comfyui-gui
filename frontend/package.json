@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
+    "build:runtime": "npm run build && rm -rf ../runtime/frontend && mkdir -p ../runtime/frontend && cp -R dist/. ../runtime/frontend/",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.vue",
     "format": "prettier --write .",
