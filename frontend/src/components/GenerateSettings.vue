@@ -1,9 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import yaml from 'js-yaml'
 import AutoComplete from './AutoComplete.vue'
 import DynamicInput from './DynamicInput.vue'
 import WeightButtons from './WeightButtons.vue'
 import type { TDynamicInputItem } from '../types'
+import type { ComfyObjectInfo, WorkflowConfig, WorkflowConfigOptionalItem } from '../types/api'
+import {
+  fetchComfyObjectInfo,
+  fetchComfyUIEndpoint,
+  fetchWorkflowConfigText,
+  fetchWorkflows
+} from '../services/backendApi'
 
 const positive = ref('')
 const negative = ref('')
@@ -12,41 +20,141 @@ const queueCount = ref(0)
 const positiveTextareaRef = ref<HTMLTextAreaElement | null>(null)
 const negativeTextareaRef = ref<HTMLTextAreaElement | null>(null)
 
-const checkpointList = ['sdxl_base_1.0.safetensors', 'animagine-xl-4.0.safetensors']
-const workflowList = ['simple_t2i', 'simple_t2i_eagle']
-const currentCheckpoint = ref(checkpointList[0])
-const currentWorkflow = ref(workflowList[0])
+const loading = ref(false)
+const errorMessage = ref('')
+const endpoint = ref('')
+const objectInfo = ref<ComfyObjectInfo | null>(null)
 
-const optionalItems: TDynamicInputItem[] = [
-  {
-    id: 'size_preset',
-    title: 'Image Size Preset',
-    type: 'list',
-    options: ['square_1024', 'portrait_832x1216', 'landscape_1216x832'],
-    value: 'square_1024'
-  },
-  {
-    id: 'width',
-    title: 'Width',
-    type: 'number',
-    options: [],
-    value: 1024
-  },
-  {
-    id: 'height',
-    title: 'Height',
-    type: 'number',
-    options: [],
-    value: 1024
-  },
-  {
-    id: 'memo',
-    title: 'Memo',
-    type: 'text',
-    options: [],
-    value: 'sample memo'
+const checkpointList = ref<string[]>([])
+const workflowList = ref<string[]>([])
+const currentCheckpoint = ref('')
+const currentWorkflow = ref('')
+const optionalItems = ref<TDynamicInputItem[]>([])
+
+onMounted(async () => {
+  await initialize()
+})
+
+async function initialize() {
+  loading.value = true
+  errorMessage.value = ''
+
+  try {
+    endpoint.value = await fetchComfyUIEndpoint()
+    objectInfo.value = await fetchComfyObjectInfo(endpoint.value)
+    checkpointList.value = extractCheckpointList(objectInfo.value)
+    if (checkpointList.value.length > 0) {
+      currentCheckpoint.value = checkpointList.value[0]
+    }
+
+    workflowList.value = await fetchWorkflows()
+    if (workflowList.value.length > 0) {
+      currentWorkflow.value = workflowList.value[0]
+      await loadWorkflowConfig(currentWorkflow.value)
+    }
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '初期化に失敗しました'
+  } finally {
+    loading.value = false
   }
-]
+}
+
+async function handleWorkflowChange(event: Event) {
+  const nextWorkflow = (event.target as HTMLSelectElement).value
+  currentWorkflow.value = nextWorkflow
+  await loadWorkflowConfig(nextWorkflow)
+}
+
+async function loadWorkflowConfig(workflowName: string) {
+  const configText = await fetchWorkflowConfigText(workflowName)
+  const parsedConfig = yaml.load(configText)
+
+  if (!isWorkflowConfig(parsedConfig)) {
+    throw new Error('workflow設定の形式が不正です')
+  }
+
+  optionalItems.value = buildOptionalItems(parsedConfig.optional, objectInfo.value)
+}
+
+function buildOptionalItems(configOptional: WorkflowConfigOptionalItem[], info: ComfyObjectInfo | null): TDynamicInputItem[] {
+  return configOptional.map((item) => {
+    const options = resolveListOptions(item, info)
+    const value = resolveInitialValue(item, options)
+
+    return {
+      id: item.id,
+      title: item.input.title,
+      type: item.input.type,
+      options,
+      value
+    }
+  })
+}
+
+function resolveListOptions(item: WorkflowConfigOptionalItem, info: ComfyObjectInfo | null): string[] {
+  if (item.input.type !== 'list' || !Array.isArray(item.input.value)) {
+    return []
+  }
+
+  const resolved = getNestedValue(info, item.input.value)
+  if (!Array.isArray(resolved)) {
+    return []
+  }
+
+  return resolved.map((entry) => String(entry))
+}
+
+function resolveInitialValue(item: WorkflowConfigOptionalItem, options: string[]): string | number {
+  if (item.input.type === 'list') {
+    if (typeof item.input.default === 'string' && options.includes(item.input.default)) {
+      return item.input.default
+    }
+    return options[0] ?? ''
+  }
+
+  if (item.input.type === 'number') {
+    return typeof item.input.default === 'number' ? item.input.default : 0
+  }
+
+  return typeof item.input.default === 'string' ? item.input.default : ''
+}
+
+function extractCheckpointList(info: ComfyObjectInfo | null): string[] {
+  const value = getNestedValue(info, ['D2 Checkpoint Loader', 'input', 'required', 'ckpt_name', 0])
+  if (!Array.isArray(value)) {
+    return []
+  }
+  return value.map((entry) => String(entry))
+}
+
+function getNestedValue(source: unknown, path: Array<string | number>): unknown {
+  let current: unknown = source
+  for (const segment of path) {
+    if (current == null || typeof current !== 'object') {
+      return undefined
+    }
+    current = (current as Record<string, unknown>)[String(segment)]
+  }
+  return current
+}
+
+function isWorkflowConfig(value: unknown): value is WorkflowConfig {
+  if (value == null || typeof value !== 'object') {
+    return false
+  }
+
+  const config = value as Partial<WorkflowConfig>
+  return Array.isArray(config.required) && Array.isArray(config.optional)
+}
+
+function handleOptionalValueChange(itemId: string, value: string | number) {
+  const target = optionalItems.value.find((item) => item.id === itemId)
+  if (!target) {
+    return
+  }
+
+  target.value = value
+}
 </script>
 
 <template>
@@ -72,7 +180,7 @@ const optionalItems: TDynamicInputItem[] = [
           v-model.number="batchCount"
           type="number"
           min="1"
-          max="50"
+          max="10"
           class="w-full p-2 border rounded-md"
         />
       </div>
@@ -121,7 +229,9 @@ const optionalItems: TDynamicInputItem[] = [
         <div class="w-full">
           <label class="block text-sm font-medium mb-1">Checkpoint</label>
           <select v-model="currentCheckpoint" class="w-full p-2 border rounded-md">
-            <option v-for="cp in checkpointList" :key="cp" :value="cp">{{ cp }}</option>
+            <option v-for="cp in checkpointList" :key="cp" :value="cp">
+              {{ cp }}
+            </option>
           </select>
         </div>
 
@@ -131,15 +241,23 @@ const optionalItems: TDynamicInputItem[] = [
             :title="item.title"
             :value="item.value"
             :options="item.options"
+            @update:value="(value) => handleOptionalValueChange(item.id, value)"
           />
         </template>
 
         <div class="w-full">
           <label class="block text-sm font-medium mb-1">Workflow</label>
-          <select v-model="currentWorkflow" class="w-full p-2 border rounded-md">
+          <select
+            v-model="currentWorkflow"
+            class="w-full p-2 border rounded-md"
+            @change="handleWorkflowChange"
+          >
             <option v-for="wf in workflowList" :key="wf" :value="wf">{{ wf }}</option>
           </select>
         </div>
+
+        <p v-if="loading" class="w-full text-sm text-gray-500">設定を読み込み中です...</p>
+        <p v-if="errorMessage" class="w-full text-sm text-red-600">{{ errorMessage }}</p>
       </div>
     </details>
   </section>

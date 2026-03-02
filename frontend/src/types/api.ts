@@ -1,9 +1,37 @@
 export type WorkflowName = string
 
-export type WorkflowsResponse = {
-  workflows: WorkflowName[]
-}
+export type WorkflowsResponse = WorkflowName[]
 
 export type ComfyUIEndpointResponse = {
   endpoint: string
 }
+
+export type DynamicInputType = 'list' | 'text' | 'number'
+
+export type WorkflowSearchType = 'class_type' | 'id' | 'title'
+
+export type WorkflowConfigRequiredItem = {
+  id: string
+  workflow: {
+    search_type: WorkflowSearchType
+    search_value: string | number
+    input_name: string
+  }
+}
+
+export type WorkflowConfigOptionalItem = WorkflowConfigRequiredItem & {
+  input: {
+    title: string
+    type: DynamicInputType
+    value?: Array<string | number>
+    default?: string | number
+  }
+}
+
+export type WorkflowConfig = {
+  output_node_id: number
+  required: WorkflowConfigRequiredItem[]
+  optional: WorkflowConfigOptionalItem[]
+}
+
+export type ComfyObjectInfo = Record<string, unknown>
