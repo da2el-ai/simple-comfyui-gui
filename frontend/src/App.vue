@@ -3,8 +3,8 @@ import GenerateSettings from './components/GenerateSettings.vue'
 </script>
 
 <template>
-  <main class="container">
-    <h1 class="page-title">ComfyUI Simple Interface</h1>
+  <main class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4">ComfyUI Simple Interface</h1>
     <GenerateSettings />
   </main>
 </template>
