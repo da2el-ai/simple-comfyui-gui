@@ -44,7 +44,7 @@ func (staticServer *StaticServer) Start() error {
 	mux.HandleFunc("/api/comfyui_endpoint", staticServer.handleComfyUIEndpoint)
 	mux.HandleFunc("/api/workflows", staticServer.handleWorkflows)
 	mux.HandleFunc("/api/tags", staticServer.handleTags)
-	mux.Handle("/workflow/", http.StripPrefix("/workflow/", http.FileServer(http.Dir(staticServer.workflowDir))))
+	mux.Handle("/workflow/", newWorkflowHandler(staticServer.workflowDir))
 	mux.Handle("/", newFrontendHandler(staticServer.frontendDir))
 
 	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", defaultPort))
@@ -104,6 +104,17 @@ func newFrontendHandler(frontendDir string) http.Handler {
 			}
 		}
 
+		fileServer.ServeHTTP(response, request)
+	})
+}
+
+func newWorkflowHandler(workflowDir string) http.Handler {
+	fileServer := http.StripPrefix("/workflow/", http.FileServer(http.Dir(workflowDir)))
+
+	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		response.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
+		response.Header().Set("Pragma", "no-cache")
+		response.Header().Set("Expires", "0")
 		fileServer.ServeHTTP(response, request)
 	})
 }
