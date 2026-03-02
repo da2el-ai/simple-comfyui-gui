@@ -5,7 +5,8 @@
 ## 前提
 
 - Go 1.24 以上
-- `make`
+- macOS / Linux: `make`
+- Windows: PowerShell 5.1 以上（`make` 不要）
 - macOS の場合: Xcode Command Line Tools
 
 ## 初期確認
@@ -22,6 +23,13 @@ cd app
 make wails-dev
 ```
 
+Windows の場合は以下を実行してください（`make` 不要）。
+
+```powershell
+cd app
+powershell -ExecutionPolicy Bypass -File .\scripts\wails-dev.ps1
+```
+
 - Wails の開発モードで起動します
 - `make wails-dev` は内部で `go run github.com/wailsapp/wails/v2/cmd/wails@v2.11.0 dev` を実行します
 
@@ -32,7 +40,14 @@ cd app
 make build
 ```
 
-- 出力先: `../runtime/app`
+Windows の場合は以下を実行してください（`make` 不要）。
+
+```powershell
+cd app
+powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
+```
+
+- 出力先: `../runtime/app`（Windows は `../runtime/app.exe`）
 - ビルド時に `production` タグを付与します
 
 ## 配布向けビルド（推奨）
@@ -42,6 +57,13 @@ make build
 ```bash
 cd app
 make wails-build
+```
+
+Windows の場合は以下を実行してください（`make` 不要）。
+
+```powershell
+cd app
+powershell -ExecutionPolicy Bypass -File .\scripts\wails-build.ps1
 ```
 
 - `make build` は単体バイナリ生成用（ターミナル起動向け）です
