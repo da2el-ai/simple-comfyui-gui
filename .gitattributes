@@ -1,0 +1,22 @@
+# OS間で改行差分が出ないように、テキストはLFで統一
+* text=auto eol=lf
+
+# Windows向けスクリプトはCRLFを維持
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# バイナリは改行正規化の対象外
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.7z binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
