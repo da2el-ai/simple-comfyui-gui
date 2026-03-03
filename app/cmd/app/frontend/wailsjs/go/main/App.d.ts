@@ -4,6 +4,12 @@ import {main} from '../models';
 
 export function CheckConnection(arg1:string):Promise<main.ConnectResult>;
 
+export function CheckTagsFileExists():Promise<main.TagsFileExistsResult>;
+
+export function CreateTagsFileFromURL(arg1:string):Promise<main.ConnectResult>;
+
+export function GetDefaultTagsFileURL():Promise<string>;
+
 export function GetQRCode():Promise<main.QRCodeResult>;
 
 export function GetQRCodes():Promise<main.QRCodeListResult>;

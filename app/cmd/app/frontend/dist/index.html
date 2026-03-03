@@ -71,6 +71,18 @@
         gap: 8px;
       }
 
+      .tags-tools {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .btn-create-tags {
+        background: #1d4ed8;
+        color: #fff;
+      }
+
       .qr-row {
         display: flex;
         align-items: center;
@@ -98,6 +110,34 @@
       .error {
         color: #dc2626;
       }
+
+      .confirm-dialog {
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 16px;
+        min-width: 320px;
+      }
+
+      .confirm-dialog::backdrop {
+        background: rgba(15, 23, 42, 0.35);
+      }
+
+      .confirm-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .btn-cancel {
+        background: #64748b;
+        color: #fff;
+      }
+
+      .btn-confirm {
+        background: #2563eb;
+        color: #fff;
+      }
     </style>
   </head>
   <body>
@@ -113,8 +153,34 @@
       <section id="qr-section" class="qr-section">
         <label>QRコード</label>
         <div id="qr-list" class="qr-list"></div>
+
+        <div class="tags-tools">
+          <label for="tags-file-url">タグファイルURL</label>
+          <input
+            id="tags-file-url"
+            type="text"
+            value="https://gist.githubusercontent.com/pythongosssss/1d3efa6050356a08cea975183088159a/raw/a18fb2f94f9156cf4476b0c24a09544d6c0baec6/danbooru-tags.txt"
+          />
+          <button id="create-tags-file" class="btn-create-tags">オートコンプリートタグファイルを作成</button>
+        </div>
       </section>
+
     </main>
+
+    <dialog id="overwrite-confirm-dialog" class="confirm-dialog">
+      <div>すでに存在しますが上書きしますか？</div>
+      <div class="confirm-actions">
+        <button id="overwrite-cancel" class="btn-cancel">キャンセル</button>
+        <button id="overwrite-ok" class="btn-confirm">上書きする</button>
+      </div>
+    </dialog>
+
+    <dialog id="info-dialog" class="confirm-dialog">
+      <div id="info-message"></div>
+      <div class="confirm-actions">
+        <button id="info-ok" class="btn-confirm">OK</button>
+      </div>
+    </dialog>
 
     <script>
       const connectButton = document.getElementById("connect");
@@ -123,7 +189,16 @@
       const urlInput = document.getElementById("comfyui-url");
       const qrSection = document.getElementById("qr-section");
       const qrList = document.getElementById("qr-list");
+      const createTagsFileButton = document.getElementById("create-tags-file");
+      const tagsFileURLInput = document.getElementById("tags-file-url");
+      const overwriteConfirmDialog = document.getElementById("overwrite-confirm-dialog");
+      const overwriteCancelButton = document.getElementById("overwrite-cancel");
+      const overwriteOkButton = document.getElementById("overwrite-ok");
+      const infoDialog = document.getElementById("info-dialog");
+      const infoMessage = document.getElementById("info-message");
+      const infoOkButton = document.getElementById("info-ok");
       const defaultConnectButtonLabel = "ComfyUIに接続";
+      const defaultCreateTagsFileButtonLabel = "オートコンプリートタグファイルを作成";
 
       let connectedURL = "";
 
@@ -133,11 +208,27 @@
         connectButton.textContent = isConnecting ? "接続中..." : defaultConnectButtonLabel;
       }
 
+      function setCreatingTagsFile(isCreating) {
+        createTagsFileButton.disabled = isCreating;
+        tagsFileURLInput.disabled = isCreating;
+        createTagsFileButton.textContent = isCreating ? "作成中..." : defaultCreateTagsFileButtonLabel;
+      }
+
       async function loadSavedComfyUIURL() {
         try {
           const savedURL = await window.go.main.App.GetSavedComfyUIURL();
           if (savedURL && typeof savedURL === "string") {
             urlInput.value = savedURL;
+          }
+        } catch (_error) {
+        }
+      }
+
+      async function loadDefaultTagsFileURL() {
+        try {
+          const defaultURL = await window.go.main.App.GetDefaultTagsFileURL();
+          if (defaultURL && typeof defaultURL === "string") {
+            tagsFileURLInput.value = defaultURL;
           }
         } catch (_error) {
         }
@@ -154,6 +245,76 @@
       function hideQRCode() {
         qrSection.style.display = "none";
         qrList.innerHTML = "";
+      }
+
+      function confirmOverwrite() {
+        if (!overwriteConfirmDialog || typeof overwriteConfirmDialog.showModal !== "function") {
+          return Promise.resolve(window.confirm("すでに存在しますが上書きしますか？"));
+        }
+
+        return new Promise((resolve) => {
+          const cleanup = () => {
+            overwriteCancelButton.removeEventListener("click", onCancel);
+            overwriteOkButton.removeEventListener("click", onConfirm);
+            overwriteConfirmDialog.removeEventListener("cancel", onCancelEvent);
+            overwriteConfirmDialog.removeEventListener("close", onClose);
+          };
+
+          const onCancel = () => {
+            cleanup();
+            overwriteConfirmDialog.close();
+            resolve(false);
+          };
+
+          const onConfirm = () => {
+            cleanup();
+            overwriteConfirmDialog.close();
+            resolve(true);
+          };
+
+          const onCancelEvent = (event) => {
+            event.preventDefault();
+            cleanup();
+            overwriteConfirmDialog.close();
+            resolve(false);
+          };
+
+          const onClose = () => {
+            cleanup();
+            resolve(overwriteConfirmDialog.returnValue === "confirm");
+          };
+
+          overwriteCancelButton.addEventListener("click", onCancel);
+          overwriteOkButton.addEventListener("click", onConfirm);
+          overwriteConfirmDialog.addEventListener("cancel", onCancelEvent);
+          overwriteConfirmDialog.addEventListener("close", onClose);
+          overwriteConfirmDialog.showModal();
+        });
+      }
+
+      function showInfoDialog(message) {
+        if (!infoDialog || !infoMessage || !infoOkButton || typeof infoDialog.showModal !== "function") {
+          window.alert(message);
+          return Promise.resolve();
+        }
+
+        infoMessage.textContent = message;
+
+        return new Promise((resolve) => {
+          const onOk = () => {
+            infoDialog.close();
+          };
+
+          const onClose = () => {
+            infoOkButton.removeEventListener("click", onOk);
+            infoDialog.removeEventListener("close", onClose);
+            resolve();
+          };
+
+          infoOkButton.addEventListener("click", onOk);
+          infoDialog.addEventListener("close", onClose);
+          infoDialog.showModal();
+        });
       }
 
       async function showQRCode() {
@@ -252,9 +413,41 @@
         }
       });
 
+      createTagsFileButton.addEventListener("click", async () => {
+        setCreatingTagsFile(true);
+
+        try {
+          const existsResult = await window.go.main.App.CheckTagsFileExists();
+          if (!existsResult.success) {
+            await showInfoDialog(existsResult.message);
+            return;
+          }
+
+          if (existsResult.exists) {
+            const confirmed = await confirmOverwrite();
+            if (!confirmed) {
+              return;
+            }
+          }
+
+          const createResult = await window.go.main.App.CreateTagsFileFromURL(tagsFileURLInput.value);
+          if (!createResult.success) {
+            await showInfoDialog(createResult.message);
+            return;
+          }
+
+          await showInfoDialog("タグファイルを保存しました");
+        } catch (error) {
+          await showInfoDialog("タグファイル作成に失敗しました: " + String(error));
+        } finally {
+          setCreatingTagsFile(false);
+        }
+      });
+
       (async () => {
         hideQRCode();
         await loadSavedComfyUIURL();
+        await loadDefaultTagsFileURL();
         await connectComfyUI({ auto: true });
       })();
     </script>

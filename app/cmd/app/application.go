@@ -4,8 +4,14 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"net"
+	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/pkg/browser"
 	qrcode "github.com/skip2/go-qrcode"
@@ -40,6 +46,14 @@ type QRCodeListResult struct {
 	Message string         `json:"message"`
 	Items   []QRCodeResult `json:"items"`
 }
+
+type TagsFileExistsResult struct {
+	Success bool   `json:"success"`
+	Exists  bool   `json:"exists"`
+	Message string `json:"message"`
+}
+
+const defaultTagsFileURL = "https://gist.githubusercontent.com/pythongosssss/1d3efa6050356a08cea975183088159a/raw/a18fb2f94f9156cf4476b0c24a09544d6c0baec6/danbooru-tags.txt"
 
 func NewApp() *App {
 	return &App{
@@ -94,6 +108,73 @@ func (application *App) GetSavedComfyUIURL() string {
 	}
 
 	return loaded.ComfyUIURL
+}
+
+func (application *App) GetDefaultTagsFileURL() string {
+	return defaultTagsFileURL
+}
+
+func (application *App) CheckTagsFileExists() TagsFileExistsResult {
+	tagsFilePath := application.staticServer.TagsFilePath()
+	if tagsFilePath == "" {
+		return TagsFileExistsResult{Success: false, Exists: false, Message: "タグファイル保存先が見つかりません"}
+	}
+
+	_, err := os.Stat(tagsFilePath)
+	if err == nil {
+		return TagsFileExistsResult{Success: true, Exists: true, Message: "タグファイルが存在します"}
+	}
+
+	if os.IsNotExist(err) {
+		return TagsFileExistsResult{Success: true, Exists: false, Message: "タグファイルは未作成です"}
+	}
+
+	return TagsFileExistsResult{Success: false, Exists: false, Message: fmt.Sprintf("タグファイル確認に失敗しました: %v", err)}
+}
+
+func (application *App) CreateTagsFileFromURL(rawURL string) ConnectResult {
+	tagsFilePath := application.staticServer.TagsFilePath()
+	if tagsFilePath == "" {
+		return ConnectResult{Success: false, Message: "タグファイル保存先が見つかりません"}
+	}
+
+	trimmedURL := strings.TrimSpace(rawURL)
+	if trimmedURL == "" {
+		return ConnectResult{Success: false, Message: "タグファイルURLを入力してください"}
+	}
+
+	parsedURL, err := url.Parse(trimmedURL)
+	if err != nil || parsedURL.Scheme == "" || parsedURL.Host == "" {
+		return ConnectResult{Success: false, Message: "タグファイルURLが不正です"}
+	}
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	response, err := client.Get(trimmedURL)
+	if err != nil {
+		return ConnectResult{Success: false, Message: fmt.Sprintf("タグファイル取得に失敗しました: %v", err)}
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return ConnectResult{Success: false, Message: fmt.Sprintf("タグファイル取得に失敗しました: HTTP %d", response.StatusCode)}
+	}
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return ConnectResult{Success: false, Message: fmt.Sprintf("タグファイル読み込みに失敗しました: %v", err)}
+	}
+
+	err = os.MkdirAll(filepath.Dir(tagsFilePath), 0o755)
+	if err != nil {
+		return ConnectResult{Success: false, Message: fmt.Sprintf("タグ保存ディレクトリ作成に失敗しました: %v", err)}
+	}
+
+	err = os.WriteFile(tagsFilePath, body, 0o644)
+	if err != nil {
+		return ConnectResult{Success: false, Message: fmt.Sprintf("タグファイル保存に失敗しました: %v", err)}
+	}
+
+	return ConnectResult{Success: true, Message: "タグファイルを保存しました"}
 }
 
 func (application *App) OpenSimpleComfyUI() ConnectResult {

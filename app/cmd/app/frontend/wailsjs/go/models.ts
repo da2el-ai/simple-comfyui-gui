@@ -66,6 +66,23 @@ export namespace main {
 		    return a;
 		}
 	}
+	
+	export class TagsFileExistsResult {
+	    success: boolean;
+	    exists: boolean;
+	    message: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new TagsFileExistsResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.success = source["success"];
+	        this.exists = source["exists"];
+	        this.message = source["message"];
+	    }
+	}
 
 }
 

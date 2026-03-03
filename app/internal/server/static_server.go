@@ -98,6 +98,10 @@ func (staticServer *StaticServer) AccessURLs() []string {
 	return cloned
 }
 
+func (staticServer *StaticServer) TagsFilePath() string {
+	return staticServer.tagsFile
+}
+
 func newFrontendHandler(frontendDir string) http.Handler {
 	fileServer := http.FileServer(http.Dir(frontendDir))
 
@@ -169,7 +173,15 @@ func resolveTagsFile(ancestorDir string) string {
 		return runtimeTagsFile
 	}
 
-	return ""
+	if directoryExists(filepath.Join(ancestorDir, "tags")) {
+		return directTagsFile
+	}
+
+	if directoryExists(filepath.Join(ancestorDir, "runtime", "tags")) {
+		return runtimeTagsFile
+	}
+
+	return directTagsFile
 }
 
 func resolveSelectorDir() string {

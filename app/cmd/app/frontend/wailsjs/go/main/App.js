@@ -6,6 +6,18 @@ export function CheckConnection(arg1) {
   return window['go']['main']['App']['CheckConnection'](arg1);
 }
 
+export function CheckTagsFileExists() {
+  return window['go']['main']['App']['CheckTagsFileExists']();
+}
+
+export function CreateTagsFileFromURL(arg1) {
+  return window['go']['main']['App']['CreateTagsFileFromURL'](arg1);
+}
+
+export function GetDefaultTagsFileURL() {
+  return window['go']['main']['App']['GetDefaultTagsFileURL']();
+}
+
 export function GetQRCode() {
   return window['go']['main']['App']['GetQRCode']();
 }

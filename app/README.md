@@ -93,7 +93,7 @@ open ../runtime/Simple\ ComfyUI\ GUI.app
 ```
 
 ※ `make wails-build` 実行時は `cmd/app/build/bin` のみ自動削除されます
-※ アイコンなどの静的ファイル（例: `cmd/app/build/appicon.png`）は保持されます
+※ アプリアイコンは `/icon.png` を参照し、ビルド前に `cmd/app/build/appicon.png` へ自動同期されます
 
 ## 実行
 
