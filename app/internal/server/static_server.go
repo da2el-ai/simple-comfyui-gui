@@ -22,6 +22,7 @@ type StaticServer struct {
 	frontendDir string
 	workflowDir string
 	tagsFile    string
+	selectorDir string
 	localURL    string
 	accessURLs  []string
 }
@@ -39,11 +40,16 @@ func (staticServer *StaticServer) Start() error {
 	staticServer.frontendDir = frontendDir
 	staticServer.workflowDir = workflowDir
 	staticServer.tagsFile = tagsFile
+	staticServer.selectorDir = resolveSelectorDir()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/comfyui_endpoint", staticServer.handleComfyUIEndpoint)
 	mux.HandleFunc("/api/workflows", staticServer.handleWorkflows)
 	mux.HandleFunc("/api/tags", staticServer.handleTags)
+	mux.HandleFunc("/api/selector/", staticServer.handleSelectorGet)
+	mux.HandleFunc("/api/selector/add", staticServer.handleSelectorAdd)
+	mux.HandleFunc("/api/selector/edit/", staticServer.handleSelectorEdit)
+	mux.HandleFunc("/api/selector/delete", staticServer.handleSelectorDelete)
 	mux.Handle("/workflow/", newWorkflowHandler(staticServer.workflowDir))
 	mux.Handle("/", newFrontendHandler(staticServer.frontendDir))
 
@@ -161,6 +167,33 @@ func resolveTagsFile(ancestorDir string) string {
 	runtimeTagsFile := filepath.Join(ancestorDir, "runtime", "tags", "autocomplete.csv")
 	if fileExists(runtimeTagsFile) {
 		return runtimeTagsFile
+	}
+
+	return ""
+}
+
+func resolveSelectorDir() string {
+	executablePath, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+
+	executableDir := filepath.Dir(executablePath)
+	for depth := 0; depth <= 8; depth++ {
+		ancestorDir := executableDir
+		for i := 0; i < depth; i++ {
+			ancestorDir = filepath.Dir(ancestorDir)
+		}
+
+		direct := filepath.Join(ancestorDir, "selector")
+		if directoryExists(direct) {
+			return direct
+		}
+
+		runtime := filepath.Join(ancestorDir, "runtime", "selector")
+		if directoryExists(runtime) {
+			return runtime
+		}
 	}
 
 	return ""
