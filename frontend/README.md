@@ -2,6 +2,21 @@
 
 このディレクトリは `simple-comfyui-gui` のフロントエンド（Vue + TypeScript + Vite）です。
 
+## 主な機能（現行実装）
+
+- 画像生成設定UI（Workflow / Checkpoint / Optional項目の動的表示）
+- Prompt入力補助（AutoComplete、WeightButtons、PromptSelector）
+- 生成キュー監視と Cancel（保留中キュー削除 + 実行中ジョブ待機）
+- 生成画像のプレビュー一覧とギャラリー表示
+- 設定の `localStorage` 永続化（キー: `comfyui-settings`）
+
+### PromptSelector データ
+
+- セレクターデータは `runtime/selector/*.yml` で管理します
+- 1ファイル=メインカテゴリ、1階層のサブカテゴリを持ちます
+- サブカテゴリは key-value 形式 / list 形式のどちらでも記述できます
+- 挿入時はカーソル位置に `prompt, ` を追加します
+
 ## 前提
 
 - Node.js: 20 LTS 推奨
