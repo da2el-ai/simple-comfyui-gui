@@ -1,5 +1,11 @@
 AI_INSTRUCTION
 runtime
+!runtime/
+runtime/*
+!runtime/selector/
+!runtime/selector/**
+!runtime/workflow/
+!runtime/workflow/**
 frontend/dist
 frontend/node_modules
 .claude
