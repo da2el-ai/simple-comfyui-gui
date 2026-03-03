@@ -36,6 +36,12 @@
 - 登録済みプロンプトの呼び出し機能
 - ワークフローを自由に追加・カスタマイズ可能
 
+## 動作要件
+
+- ComfyUI が動作する Windows または Mac
+- 同一ネットワーク内、または VPN 経由で PC に到達できるスマホ/PC
+- ComfyUI を `--enable-cors-header` 付きで起動していること
+
 ## インストール方法
 
 ### ComfyUI側の事前準備
@@ -65,11 +71,6 @@ VPNが必要です。個人的には Tailscale が簡単でおすすめです。
 
 <a href="https://tailscale.com/">https://tailscale.com/</a>
 
-## 動作要件
-
-- ComfyUI が動作する PC
-- 同一ネットワーク内、または VPN 経由で PC に到達できるスマホ/PC
-- ComfyUI を `--enable-cors-header` 付きで起動していること
 
 ## よくあるトラブル
 
