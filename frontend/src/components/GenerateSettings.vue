@@ -5,6 +5,7 @@ import DynamicInput from './DynamicInput.vue'
 import WeightButtons from './WeightButtons.vue'
 import ImagePreview from './ImagePreview.vue'
 import ImageGallery from './ImageGallery.vue'
+import CheckpointSelector from './CheckpointSelector.vue'
 import { useGenerateSettings } from '../composables/useGenerateSettings'
 import { useImageGeneration } from '../composables/useImageGeneration'
 import { loadSettings, saveSettings, saveOptionalValues } from '../composables/useLocalSettings'
@@ -210,11 +211,10 @@ function startAutoSave(): void {
 
         <div class="w-full">
           <label class="block text-sm font-medium mb-1">Checkpoint</label>
-          <select v-model="currentCheckpoint" class="w-full p-2 border rounded-md">
-            <option v-for="cp in checkpointList" :key="cp" :value="cp">
-              {{ cp }}
-            </option>
-          </select>
+          <CheckpointSelector
+            v-model="currentCheckpoint"
+            :checkpoint-list="checkpointList"
+          />
         </div>
 
         <template v-for="item in optionalItems" :key="item.id">
