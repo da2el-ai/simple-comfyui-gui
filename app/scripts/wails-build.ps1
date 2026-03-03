@@ -24,7 +24,10 @@ try {
 
     if (Test-Path "./build/bin") {
         Copy-Item "./build/bin/*" "../../../runtime/" -Recurse -Force
-        Remove-Item "./build/bin" -Recurse -Force
+    }
+
+    if (Test-Path "./build") {
+        Remove-Item "./build" -Recurse -Force
     }
 }
 finally {

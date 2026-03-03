@@ -92,8 +92,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\wails-build.ps1
 open ../runtime/Simple\ ComfyUI\ GUI.app
 ```
 
-※ `make wails-build` 実行時は `cmd/app/build/bin` のみ自動削除されます
+※ `make wails-build` 実行時は `cmd/app/build` が自動削除されます
 ※ アプリアイコンは `/icon.png` を参照し、ビルド前に `cmd/app/build/appicon.png` へ自動同期されます
+※ `cmd/app/build/appicon.png` と `cmd/app/build/darwin/Info.plist` は生成物扱いで Git 管理対象外です
 
 ## 実行
 

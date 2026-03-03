@@ -12,3 +12,6 @@ frontend/dist
 frontend/node_modules
 .claude
 simple-comfyui
+
+app/cmd/app/build/appicon.png
+app/cmd/app/build/darwin/Info.plist

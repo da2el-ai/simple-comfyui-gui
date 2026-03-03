@@ -35,10 +35,10 @@ wails-build:
 	cp $(ICON_SOURCE) $(ICON_TARGET)
 	cd $(WAILS_PROJECT_DIR) && $(WAILS_CMD) build -s
 	cd $(WAILS_PROJECT_DIR) && cp -R ./build/bin/*.app ../../../runtime/
-	rm -rf $(WAILS_PROJECT_DIR)/build/bin
+	rm -rf $(WAILS_PROJECT_DIR)/build
 
 clean:
 	rm -f $(RUNTIME_DIR)/app
 	rm -rf $(RUNTIME_DIR)/*.app
-	rm -rf $(WAILS_PROJECT_DIR)/build/bin
+	rm -rf $(WAILS_PROJECT_DIR)/build
 	rm -rf ./cmd/runtime
