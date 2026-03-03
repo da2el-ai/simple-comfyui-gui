@@ -14,10 +14,10 @@ import {
   fetchWorkflowJson,
   fetchWorkflows
 } from '../services/backendApi'
+import { useAsyncState } from './useAsyncState'
 
 export function useGenerateSettings() {
-  const loading = ref(false)
-  const errorMessage = ref('')
+  const { loading, errorMessage, run } = useAsyncState()
   const endpoint = ref('')
   const objectInfo = ref<ComfyObjectInfo | null>(null)
   const workflowConfig = ref<WorkflowConfig | null>(null)
@@ -31,10 +31,7 @@ export function useGenerateSettings() {
 
   /** 初期化: エンドポイント・object_info・ワークフロー一覧を取得する */
   async function initialize(): Promise<void> {
-    loading.value = true
-    errorMessage.value = ''
-
-    try {
+    await run(async () => {
       endpoint.value = await fetchComfyUIEndpoint()
       objectInfo.value = await fetchComfyObjectInfo(endpoint.value)
       checkpointList.value = extractCheckpointList(objectInfo.value)
@@ -49,27 +46,15 @@ export function useGenerateSettings() {
         currentWorkflow.value = workflowList.value[0]
         await loadWorkflowResources(currentWorkflow.value)
       }
-    } catch (error) {
-      errorMessage.value = error instanceof Error ? error.message : '初期化に失敗しました'
-    } finally {
-      loading.value = false
-    }
+    }, '初期化に失敗しました')
   }
 
   /** ワークフロー切り替え */
   async function changeWorkflow(nextWorkflow: string): Promise<void> {
-    loading.value = true
-    errorMessage.value = ''
-
-    try {
+    await run(async () => {
       currentWorkflow.value = nextWorkflow
       await loadWorkflowResources(nextWorkflow)
-    } catch (error) {
-      errorMessage.value =
-        error instanceof Error ? error.message : 'ワークフロー切り替えに失敗しました'
-    } finally {
-      loading.value = false
-    }
+    }, 'ワークフロー切り替えに失敗しました')
   }
 
   /** ワークフロー設定と JSON を読み込む */

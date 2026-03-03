@@ -1,4 +1,5 @@
 import { ref, type Ref } from 'vue'
+import { toErrorMessage } from './useAsyncState'
 import type { TDynamicInputItem } from '../types'
 import type {
   PromptHistory,
@@ -59,7 +60,7 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
       await monitorPromptCompletion(promptIds)
       generationMessage.value = '生成が完了しました'
     } catch (error) {
-      errorMessage.value = error instanceof Error ? error.message : '画像生成に失敗しました'
+      errorMessage.value = toErrorMessage(error, '画像生成に失敗しました')
       generationMessage.value = ''
     } finally {
       isGenerating.value = false
