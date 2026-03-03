@@ -1,0 +1,111 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: app/go.mod
+
+      - name: Build macOS app
+        working-directory: app
+        run: make wails-build
+
+      - name: Package macOS zip
+        shell: bash
+        run: |
+          set -euo pipefail
+          pkg_dir="dist/Simple-ComfyUI-GUI-macOS"
+          zip_file="Simple-ComfyUI-GUI-macOS.zip"
+
+          rm -rf "$pkg_dir" "$zip_file"
+          mkdir -p "$pkg_dir"
+
+          cp -R runtime/*.app "$pkg_dir"/
+
+          for dir in frontend workflow tags selector; do
+            if [ -d "runtime/$dir" ]; then
+              cp -R "runtime/$dir" "$pkg_dir"/
+            fi
+          done
+
+          (cd dist && zip -r "../$zip_file" "Simple-ComfyUI-GUI-macOS")
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-zip
+          path: Simple-ComfyUI-GUI-macOS.zip
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: app/go.mod
+
+      - name: Build Windows app
+        shell: pwsh
+        run: |
+          Set-Location app
+          powershell -ExecutionPolicy Bypass -File .\scripts\wails-build.ps1
+
+      - name: Package Windows zip
+        shell: pwsh
+        run: |
+          $pkgDir = "dist/Simple-ComfyUI-GUI-Windows"
+          $zipFile = "Simple-ComfyUI-GUI-Windows.zip"
+
+          if (Test-Path $pkgDir) { Remove-Item $pkgDir -Recurse -Force }
+          if (Test-Path $zipFile) { Remove-Item $zipFile -Force }
+
+          New-Item -ItemType Directory -Path $pkgDir -Force | Out-Null
+
+          Copy-Item "runtime\*" $pkgDir -Recurse -Force
+
+          Compress-Archive -Path "$pkgDir\*" -DestinationPath $zipFile -Force
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-zip
+          path: Simple-ComfyUI-GUI-Windows.zip
+
+  publish-release:
+    runs-on: ubuntu-latest
+    needs:
+      - build-macos
+      - build-windows
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist-artifacts
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist-artifacts/macos-zip/Simple-ComfyUI-GUI-macOS.zip
+            dist-artifacts/windows-zip/Simple-ComfyUI-GUI-Windows.zip
+          generate_release_notes: true
