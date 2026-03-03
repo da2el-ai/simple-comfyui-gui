@@ -1,5 +1,5 @@
 <script setup lang="ts">
-type InputType = 'list' | 'text' | 'number'
+type InputType = 'list' | 'text' | 'number' | 'textarea'
 
 interface Props {
   type: InputType
@@ -41,6 +41,14 @@ const emit = defineEmits<{
       :value="props.value"
       @input="emit('update:value', Number(($event.target as HTMLInputElement).value))"
       class="w-full p-2 border rounded-md"
+    />
+
+    <textarea
+      v-if="props.type === 'textarea'"
+      :value="props.value"
+      @input="emit('update:value', ($event.target as HTMLTextAreaElement).value)"
+      class="w-full p-2 border rounded-md resize-vertical"
+      rows="3"
     />
   </div>
 </template>
