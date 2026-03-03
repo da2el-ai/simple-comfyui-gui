@@ -4,6 +4,10 @@ import type {
   ComfyUIEndpointResponse,
   PromptHistory,
   PromptResponse,
+  SelectorAddRequest,
+  SelectorAllData,
+  SelectorDeleteRequest,
+  SelectorEditRequest,
   WorkflowData,
   WorkflowName,
   WorkflowsResponse
@@ -122,5 +126,59 @@ export async function deleteQueueItems(endpoint: string, ids: string[]): Promise
   })
   if (!response.ok) {
     throw new Error(`queue削除に失敗しました: ${response.status}`)
+  }
+}
+
+// ─── PromptSelector API ────────────────────────────────────────────────────────
+
+/** セレクター全データを取得する */
+export async function fetchSelectorData(): Promise<SelectorAllData> {
+  return getJson<SelectorAllData>('/api/selector/')
+}
+
+/** セレクターアイテムを追加する */
+export async function addSelectorItem(req: SelectorAddRequest): Promise<void> {
+  const response = await fetch('/api/selector/add', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req)
+  })
+  if (!response.ok) {
+    const data = (await response.json()) as { error?: string }
+    throw new Error(data.error ?? `selector/add 失敗: ${response.status}`)
+  }
+}
+
+/** セレクターアイテムを編集する */
+export async function editSelectorItem(
+  category: string,
+  subcategory: string,
+  name: string,
+  req: SelectorEditRequest
+): Promise<void> {
+  const response = await fetch(
+    `/api/selector/edit/${encodeURIComponent(category)}/${encodeURIComponent(subcategory)}/${encodeURIComponent(name)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req)
+    }
+  )
+  if (!response.ok) {
+    const data = (await response.json()) as { error?: string }
+    throw new Error(data.error ?? `selector/edit 失敗: ${response.status}`)
+  }
+}
+
+/** セレクターデータ（アイテム/サブカテゴリ/カテゴリ）を削除する */
+export async function deleteSelectorData(req: SelectorDeleteRequest): Promise<void> {
+  const response = await fetch('/api/selector/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req)
+  })
+  if (!response.ok) {
+    const data = (await response.json()) as { error?: string }
+    throw new Error(data.error ?? `selector/delete 失敗: ${response.status}`)
   }
 }

@@ -6,6 +6,7 @@ import WeightButtons from './WeightButtons.vue'
 import ImagePreview from './ImagePreview.vue'
 import ImageGallery from './ImageGallery.vue'
 import CheckpointSelector from './CheckpointSelector.vue'
+import PromptSelector from './PromptSelector.vue'
 import { useGenerateSettings } from '../composables/useGenerateSettings'
 import { useImageGeneration } from '../composables/useImageGeneration'
 import { loadSettings, saveSettings, saveOptionalValues } from '../composables/useLocalSettings'
@@ -126,7 +127,10 @@ function startAutoSave(): void {
 <template>
   <section id="generate-settings">
     <div class="mb-4">
-      <label class="block text-sm font-medium mb-1">Positive Prompt</label>
+      <div class="prompt-label-row">
+        <label class="block text-sm font-medium mb-1">Positive Prompt</label>
+        <PromptSelector v-model="positive" :target-element="positiveTextareaRef" />
+      </div>
       <div class="relative">
         <textarea
           ref="positiveTextareaRef"
@@ -196,7 +200,10 @@ function startAutoSave(): void {
 
       <div class="flex gap-4 mb-6" style="flex-wrap: wrap">
         <div class="w-full">
-          <label class="block text-sm font-medium mb-1">Negative Prompt</label>
+          <div class="prompt-label-row">
+            <label class="block text-sm font-medium mb-1">Negative Prompt</label>
+            <PromptSelector v-model="negative" :target-element="negativeTextareaRef" />
+          </div>
           <div class="relative">
             <textarea
               ref="negativeTextareaRef"
@@ -244,3 +251,12 @@ function startAutoSave(): void {
     </details>
   </section>
 </template>
+
+<style scoped>
+.prompt-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+</style>

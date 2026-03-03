@@ -63,3 +63,41 @@ export type ComfyQueue = {
   queue_running: Array<[number, string, ...unknown[]]>
   queue_pending: Array<[number, string, ...unknown[]]>
 }
+
+// ─── PromptSelector ───────────────────────────────────────────────────────────
+
+export type SelectorItem = {
+  name: string
+  prompt: string
+}
+
+export type SelectorSubcategory = {
+  subcategory: string
+  items: SelectorItem[]
+}
+
+/** カテゴリ名 → サブカテゴリ一覧 */
+export type SelectorAllData = Record<string, SelectorSubcategory[]>
+
+export type SelectorDeleteType = 'item' | 'subcategory' | 'category'
+
+export type SelectorAddRequest = {
+  category: string
+  new_category?: string
+  subcategory: string
+  new_subcategory?: string
+  name: string
+  prompt: string
+}
+
+export type SelectorEditRequest = {
+  new_name?: string
+  new_prompt?: string
+}
+
+export type SelectorDeleteRequest = {
+  type: SelectorDeleteType
+  category: string
+  subcategory?: string
+  name?: string
+}
