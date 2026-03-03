@@ -14,12 +14,7 @@ const emit = defineEmits<{
   <div v-if="props.images.length > 0" class="preview-container">
     <div class="preview-header">
 <!--      <h2 class="preview-title">Preview</h2> -->
-      <button
-        class="px-3 py-1 text-xs bg-gray-500 text-white rounded-md hover:bg-gray-600"
-        @click="emit('clear')"
-      >
-        x
-      </button>
+      <button type="button" class="preview-clear-btn" @click="emit('clear')">&times;</button>
     </div>
     <div class="preview-grid">
       <div
@@ -55,9 +50,23 @@ const emit = defineEmits<{
   margin: 0;
 }
 
+.preview-clear-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.preview-clear-btn:hover {
+  color: #ef4444;
+}
+
 .preview-grid {
   display: grid;
-  grid-template-columns: repeat( auto-fill, minmax(70px, 1fr));
+  grid-template-columns: repeat( auto-fill, minmax(60px, 1fr));
   gap: 0.5rem;
 }
 
