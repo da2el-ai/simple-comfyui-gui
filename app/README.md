@@ -92,7 +92,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\wails-build.ps1
 open ../runtime/Simple\ ComfyUI\ GUI.app
 ```
 
-※ ビルド内部では `cmd/app/build` が一時的に生成されますが、`make wails-build` 実行後に自動削除されます
+※ `make wails-build` 実行時は `cmd/app/build/bin` のみ自動削除されます
+※ アイコンなどの静的ファイル（例: `cmd/app/build/appicon.png`）は保持されます
 
 ## 実行
 
@@ -111,3 +112,15 @@ make fmt
 make test
 make tidy
 ```
+
+## バックエンドHTTP API（フロント向け）
+
+- `GET /api/comfyui_endpoint`
+- `GET /api/workflows`
+- `GET /api/tags`（`tags/autocomplete.csv` または `runtime/tags/autocomplete.csv` を配信）
+- `GET /api/selector/`（`runtime/selector/*.yml` を集約して返却）
+- `POST /api/selector/add`
+- `POST /api/selector/edit/{category}/{subcategory}/{name}`
+- `POST /api/selector/delete`
+
+`PromptSelector` で使用するセレクターデータは `runtime/selector/*.yml` を編集して管理します。
