@@ -1,5 +1,6 @@
 import type {
   ComfyObjectInfo,
+  ComfyQueue,
   ComfyUIEndpointResponse,
   PromptHistory,
   PromptResponse,
@@ -100,4 +101,26 @@ export async function fetchPromptHistory(endpoint: string, promptId: string): Pr
     throw new Error(`history取得に失敗しました: ${response.status}`)
   }
   return (await response.json()) as PromptHistory
+}
+
+/** ComfyUIのキュー状態を取得する */
+export async function fetchQueue(endpoint: string): Promise<ComfyQueue> {
+  const response = await fetch(`${endpoint}/queue`, { cache: 'no-store' })
+  if (!response.ok) {
+    throw new Error(`queue取得に失敗しました: ${response.status}`)
+  }
+  return (await response.json()) as ComfyQueue
+}
+
+/** ComfyUIの保留中キューを削除する */
+export async function deleteQueueItems(endpoint: string, ids: string[]): Promise<void> {
+  if (ids.length === 0) return
+  const response = await fetch(`${endpoint}/queue`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ delete: ids })
+  })
+  if (!response.ok) {
+    throw new Error(`queue削除に失敗しました: ${response.status}`)
+  }
 }

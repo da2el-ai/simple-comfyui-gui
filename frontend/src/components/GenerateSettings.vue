@@ -39,7 +39,7 @@ const generation = useImageGeneration({
   negative,
   batchCount
 })
-const { isGenerating, generationMessage, queueCount, generateImages } = generation
+const { isGenerating, generationMessage, queueCount, generateImages, cancelGeneration } = generation
 
 // どちらかのエラーメッセージを表示する
 const errorMessage = computed(
@@ -147,7 +147,10 @@ function startAutoSave(): void {
         {{ isGenerating ? 'Generating...' : 'Generate' }}
       </button>
 
-      <button class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600" disabled>Cancel</button>
+      <button class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:bg-gray-400"
+        :disabled="!isGenerating"
+        @click="cancelGeneration"
+      >Cancel</button>
 
       <button class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600" disabled>
         Clear Preview

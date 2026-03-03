@@ -51,3 +51,9 @@ export type PromptResponse = {
 }
 
 export type PromptHistory = Record<string, unknown>
+
+/** ComfyUI /queue レスポンス */
+export type ComfyQueue = {
+  queue_running: Array<[number, string, ...unknown[]]>
+  queue_pending: Array<[number, string, ...unknown[]]>
+}

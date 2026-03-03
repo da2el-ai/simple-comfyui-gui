@@ -10,7 +10,7 @@ import type {
   WorkflowNode,
   WorkflowSearchType
 } from '../types/api'
-import { fetchPromptHistory, submitPrompt } from '../services/backendApi'
+import { fetchPromptHistory, fetchQueue, deleteQueueItems, submitPrompt } from '../services/backendApi'
 
 export interface ImageGenerationDeps {
   endpoint: Ref<string>
@@ -23,7 +23,7 @@ export interface ImageGenerationDeps {
   batchCount: Ref<number>
 }
 
-const HISTORY_POLL_BASE_MS = 3000
+const HISTORY_POLL_BASE_MS = 1000
 const HISTORY_POLL_MAX_MS = 10000
 const HISTORY_MONITOR_TIMEOUT_MS = 15 * 60 * 1000
 
@@ -32,6 +32,8 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
   const generationMessage = ref('')
   const errorMessage = ref('')
   const queueCount = ref(0)
+  // 現在監視中の prompt_id リスト（キャンセル時に参照する）
+  const activePromptIds = ref<string[]>([])
 
   /** 画像生成を実行する */
   async function generateImages(): Promise<void> {
@@ -56,14 +58,46 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
         queueCount.value = promptIds.length
       }
 
+      activePromptIds.value = [...promptIds]
       generationMessage.value = '生成完了を確認中です...'
-      await monitorPromptCompletion(promptIds)
-      generationMessage.value = '生成が完了しました'
+      await monitorPromptCompletion()
+      if (activePromptIds.value.length === 0) {
+        generationMessage.value = '生成が完了しました'
+      }
     } catch (error) {
       errorMessage.value = toErrorMessage(error, '画像生成に失敗しました')
       generationMessage.value = ''
     } finally {
       isGenerating.value = false
+      activePromptIds.value = []
+      queueCount.value = 0
+    }
+  }
+
+  /** 保留中キューを削除し生成をキャンセルする。実行中のジョブは完了を待機する。 */
+  async function cancelGeneration(): Promise<void> {
+    if (!isGenerating.value || !deps.endpoint.value) return
+
+    try {
+      const queue = await fetchQueue(deps.endpoint.value)
+
+      // 実行中 ID（先頭要素のみ）
+      const runningId =
+        Array.isArray(queue.queue_running) && queue.queue_running.length > 0
+          ? queue.queue_running[0][1]
+          : null
+
+      // 保留中 ID を全て削除
+      const pendingIds = (queue.queue_pending ?? []).map((item) => item[1])
+      await deleteQueueItems(deps.endpoint.value, pendingIds)
+
+      // activePromptIds を実行中のもののみに絞り込む
+      activePromptIds.value = runningId ? [runningId] : []
+      queueCount.value = activePromptIds.value.length
+      generationMessage.value = 'キャンセルしました'
+      // isGenerating は generateImages の finally ブロックで管理する
+    } catch (error) {
+      errorMessage.value = toErrorMessage(error, 'キャンセルに失敗しました')
     }
   }
 
@@ -171,17 +205,29 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
 
   // --- 内部: 生成完了監視 ---
 
-  async function monitorPromptCompletion(promptIds: string[]): Promise<void> {
-    while (promptIds.length > 0) {
-      const promptId = promptIds[0]
+  async function monitorPromptCompletion(): Promise<void> {
+    // activePromptIds のスナップショットを取りつつ、順番に完了を待つ
+    const idsToMonitor = [...activePromptIds.value]
+
+    for (const promptId of idsToMonitor) {
+      // キャンセルで activePromptIds から除外済みならスキップ
+      if (!activePromptIds.value.includes(promptId)) {
+        continue
+      }
+
       const completed = await waitForPromptCompletion(promptId)
+
+      // 待機中にキャンセルされた場合もスキップ
+      if (!activePromptIds.value.includes(promptId)) {
+        continue
+      }
 
       if (!completed) {
         throw new Error(`生成完了の確認に失敗しました: ${promptId}`)
       }
 
-      promptIds.shift()
-      queueCount.value = promptIds.length
+      activePromptIds.value = activePromptIds.value.filter((id) => id !== promptId)
+      queueCount.value = activePromptIds.value.length
     }
   }
 
@@ -190,6 +236,11 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     let nextInterval = HISTORY_POLL_BASE_MS
 
     while (Date.now() - startedAt < HISTORY_MONITOR_TIMEOUT_MS) {
+      // activePromptIds から除去されていたらキャンセル扱いで即終了
+      if (!activePromptIds.value.includes(promptId)) {
+        return false
+      }
+
       try {
         const history = await fetchPromptHistory(deps.endpoint.value, promptId)
         if (isPromptCompleted(history, promptId)) {
@@ -231,6 +282,7 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     generationMessage,
     errorMessage,
     queueCount,
-    generateImages
+    generateImages,
+    cancelGeneration
   }
 }
