@@ -3,6 +3,8 @@ import { computed, onMounted, ref, watch } from 'vue'
 import AutoComplete from './AutoComplete.vue'
 import DynamicInput from './DynamicInput.vue'
 import WeightButtons from './WeightButtons.vue'
+import ImagePreview from './ImagePreview.vue'
+import ImageGallery from './ImageGallery.vue'
 import { useGenerateSettings } from '../composables/useGenerateSettings'
 import { useImageGeneration } from '../composables/useImageGeneration'
 import { loadSettings, saveSettings, saveOptionalValues } from '../composables/useLocalSettings'
@@ -39,7 +41,28 @@ const generation = useImageGeneration({
   negative,
   batchCount
 })
-const { isGenerating, generationMessage, queueCount, generateImages, cancelGeneration } = generation
+const {
+  isGenerating,
+  generationMessage,
+  queueCount,
+  previewImages,
+  generateImages,
+  cancelGeneration,
+  clearPreview
+} = generation
+
+// --- ギャラリー状態 ---
+const showGallery = ref(false)
+const selectedImageIndex = ref(0)
+
+function openGallery(index: number): void {
+  selectedImageIndex.value = index
+  showGallery.value = true
+}
+
+function closeGallery(): void {
+  showGallery.value = false
+}
 
 // どちらかのエラーメッセージを表示する
 const errorMessage = computed(
@@ -138,7 +161,7 @@ function startAutoSave(): void {
       <WeightButtons v-model="positive" :target-element="positiveTextareaRef" />
     </div>
 
-    <div class="flex gap-4 mb-2">
+    <div class="flex gap-4 mb-4">
       <button
         class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
         :disabled="loading || isGenerating || !workflowData || !workflowConfig"
@@ -152,12 +175,20 @@ function startAutoSave(): void {
         @click="cancelGeneration"
       >Cancel</button>
 
-      <button class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600" disabled>
-        Clear Preview
-      </button>
     </div>
 
     <p v-if="generationMessage" class="mb-4 text-sm text-gray-600">{{ generationMessage }}</p>
+
+    <!-- プレビュー -->
+    <ImagePreview :images="previewImages" @open="openGallery" @clear="clearPreview" class="mb-4" />
+
+    <!-- ギャラリーモーダル -->
+    <ImageGallery
+      v-if="showGallery"
+      :images="previewImages"
+      :initial-index="selectedImageIndex"
+      @close="closeGallery"
+    />
 
     <details class="mb-6">
       <summary>Advanced Settings</summary>

@@ -2,6 +2,7 @@ import { ref, type Ref } from 'vue'
 import { toErrorMessage } from './useAsyncState'
 import type { TDynamicInputItem } from '../types'
 import type {
+  ComfyImageFile,
   PromptHistory,
   WorkflowConfig,
   WorkflowConfigOptionalItem,
@@ -32,6 +33,7 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
   const generationMessage = ref('')
   const errorMessage = ref('')
   const queueCount = ref(0)
+  const previewImages = ref<string[]>([])
   // 現在監視中の prompt_id リスト（キャンセル時に参照する）
   const activePromptIds = ref<string[]>([])
 
@@ -226,6 +228,14 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
         throw new Error(`生成完了の確認に失敗しました: ${promptId}`)
       }
 
+      // 完了した履歴から画像 URL を取得して追加する
+      try {
+        const history = await fetchPromptHistory(deps.endpoint.value, promptId)
+        appendImagesFromHistory(history, promptId)
+      } catch {
+        // 画像取得失敗時はスキップ
+      }
+
       activePromptIds.value = activePromptIds.value.filter((id) => id !== promptId)
       queueCount.value = activePromptIds.value.length
     }
@@ -271,6 +281,33 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     return Object.keys(outputs as Record<string, unknown>).length > 0
   }
 
+  function appendImagesFromHistory(history: PromptHistory, promptId: string): void {
+    const promptHistory = history[promptId] as Record<string, unknown> | undefined
+    if (!promptHistory) return
+
+    const outputs = promptHistory.outputs as Record<string, unknown> | undefined
+    if (!outputs) return
+
+    const outputNodeId = deps.workflowConfig.value?.output_node_id
+    if (outputNodeId == null) return
+
+    const nodeOutput = outputs[String(outputNodeId)] as Record<string, unknown> | undefined
+    if (!nodeOutput) return
+
+    const images = nodeOutput.images as ComfyImageFile[] | undefined
+    if (!Array.isArray(images)) return
+
+    for (const image of images) {
+      const typeParam = image.type === 'temp' ? '&type=temp' : ''
+      const url = `${deps.endpoint.value}/view?filename=${encodeURIComponent(image.filename)}${typeParam}`
+      previewImages.value.unshift(url)
+    }
+  }
+
+  function clearPreview(): void {
+    previewImages.value = []
+  }
+
   function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => {
       setTimeout(resolve, ms)
@@ -282,7 +319,9 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     generationMessage,
     errorMessage,
     queueCount,
+    previewImages,
     generateImages,
-    cancelGeneration
+    cancelGeneration,
+    clearPreview
   }
 }

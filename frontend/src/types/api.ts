@@ -50,6 +50,12 @@ export type PromptResponse = {
   prompt_id: string
 }
 
+export type ComfyImageFile = {
+  filename: string
+  subfolder: string
+  type: string
+}
+
 export type PromptHistory = Record<string, unknown>
 
 /** ComfyUI /queue レスポンス */
