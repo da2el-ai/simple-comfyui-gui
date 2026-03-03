@@ -15,6 +15,8 @@ import {
   fetchWorkflows
 } from '../services/backendApi'
 import { useAsyncState } from './useAsyncState'
+import { loadSettings } from './useLocalSettings'
+import type { PersistedSettings } from './useLocalSettings'
 
 export function useGenerateSettings() {
   const { loading, errorMessage, run } = useAsyncState()
@@ -30,21 +32,30 @@ export function useGenerateSettings() {
   const optionalItems = ref<TDynamicInputItem[]>([])
 
   /** 初期化: エンドポイント・object_info・ワークフロー一覧を取得する */
-  async function initialize(): Promise<void> {
+  async function initialize(saved?: PersistedSettings): Promise<void> {
     await run(async () => {
       endpoint.value = await fetchComfyUIEndpoint()
       objectInfo.value = await fetchComfyObjectInfo(endpoint.value)
       checkpointList.value = extractCheckpointList(objectInfo.value)
 
-      if (checkpointList.value.length > 0) {
+      // 保存済みチェックポイントをリスト内で優先選択する
+      if (saved?.currentCheckpoint && checkpointList.value.includes(saved.currentCheckpoint)) {
+        currentCheckpoint.value = saved.currentCheckpoint
+      } else if (checkpointList.value.length > 0) {
         currentCheckpoint.value = checkpointList.value[0]
       }
 
       workflowList.value = await fetchWorkflows()
 
-      if (workflowList.value.length > 0) {
-        currentWorkflow.value = workflowList.value[0]
-        await loadWorkflowResources(currentWorkflow.value)
+      // 保存済みワークフローをリスト内で優先選択する
+      const preferredWorkflow =
+        saved?.currentWorkflow && workflowList.value.includes(saved.currentWorkflow)
+          ? saved.currentWorkflow
+          : workflowList.value[0]
+
+      if (preferredWorkflow) {
+        currentWorkflow.value = preferredWorkflow
+        await loadWorkflowResources(preferredWorkflow)
       }
     }, '初期化に失敗しました')
   }
@@ -71,7 +82,23 @@ export function useGenerateSettings() {
 
     workflowConfig.value = parsedConfig
     workflowData.value = workflowJson
-    optionalItems.value = buildOptionalItems(parsedConfig.optional, objectInfo.value)
+    const items = buildOptionalItems(parsedConfig.optional, objectInfo.value)
+
+    // 保存済み値をワークフロー別に復元する（リスト項目はオプション一覧に含まれる値のみ採用）
+    const savedValues = loadSettings().optionalValues[workflowName]
+    if (savedValues) {
+      for (const item of items) {
+        const saved = savedValues[item.id]
+        if (saved === undefined) continue
+        if (item.type === 'list') {
+          if (item.options.includes(String(saved))) item.value = String(saved)
+        } else {
+          item.value = saved
+        }
+      }
+    }
+
+    optionalItems.value = items
   }
 
   /** 任意設定の値を変更する */

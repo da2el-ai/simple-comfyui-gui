@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import AutoComplete from './AutoComplete.vue'
 import DynamicInput from './DynamicInput.vue'
 import WeightButtons from './WeightButtons.vue'
 import { useGenerateSettings } from '../composables/useGenerateSettings'
 import { useImageGeneration } from '../composables/useImageGeneration'
+import { loadSettings, saveSettings, saveOptionalValues } from '../composables/useLocalSettings'
 
 // --- UI 専有の状態 ---
 const positive = ref('')
@@ -46,7 +47,17 @@ const errorMessage = computed(
 )
 
 onMounted(async () => {
-  await settings.initialize()
+  // 保存済み設定を読み込んで UI 状態に反映する
+  const saved = loadSettings()
+  positive.value = saved.positive
+  negative.value = saved.negative
+  batchCount.value = saved.batchCount
+
+  // 設定管理 composable に保存済み選択を渡して初期化する
+  await settings.initialize(saved)
+
+  // 初期化後、設定変更の自動保存を開始する
+  startAutoSave()
 })
 
 function handleWorkflowChange(event: Event): void {
@@ -57,6 +68,35 @@ function handleWorkflowChange(event: Event): void {
   void settings.changeWorkflow(nextWorkflow)
 }
 
+// --- 自動保存 ---
+
+/** 各 ref の変更を監視して localStorage へ自動保存する */
+function startAutoSave(): void {
+  // プロンプト・基本設定の保存
+  watch(
+    [positive, negative, batchCount, currentCheckpoint, currentWorkflow],
+    ([pos, neg, batch, checkpoint, workflow]) => {
+      saveSettings({
+        positive: pos,
+        negative: neg,
+        batchCount: batch,
+        currentCheckpoint: checkpoint,
+        currentWorkflow: workflow
+      })
+    }
+  )
+
+  // optional 項目（DynamicInput）の保存 — ワークフロー別に保存する
+  watch(
+    optionalItems,
+    (items) => {
+      if (!currentWorkflow.value || items.length === 0) return
+      const values = Object.fromEntries(items.map((item) => [item.id, item.value]))
+      saveOptionalValues(currentWorkflow.value, values)
+    },
+    { deep: true }
+  )
+}
 </script>
 
 <template>
