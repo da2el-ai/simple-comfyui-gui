@@ -85,6 +85,31 @@ VPNが必要です。個人的には Tailscale が簡単でおすすめです。
 - ワークフロー設定 YAML の `required` / `optional` の対応先が実ワークフローと一致しているか確認してください
 
 
+## プロンプトオートコンプリート
+
+プロンプトの補間機能を使うには `{インストールフォルダ}/tags/autocomplete.csv` を用意する必要があります。
+
+QRコードの下、「オートコンプリートタグファイルを作成」をクリックすると作成されます。<br>
+[ComfyUI-Custom-Scripts](https://github.com/pythongosssss/ComfyUI-Custom-Scripts) の [Gist](https://gist.githubusercontent.com/pythongosssss/1d3efa6050356a08cea975183088159a/raw/a18fb2f94f9156cf4476b0c24a09544d6c0baec6/danbooru-tags.txt) から取得して保存します。
+
+<img src="./img/save-tag.png">
+
+
+## プロンプトセレクター
+
+ポジティブ、ネガティブプロンプトの上にある `Prompts` ボタンをクリックすると登録したプロンプトを呼び出せます。
+
+編集は下記のいずれかの方法で行えます。
+
+- プロンプトセレクターから「追加」「編集」をクリック
+- `{インストールフォルダ}/selector/` 内のYAMLファイルを直接編集
+
+<img src="./img/prompt-selector-edit.png">
+
+
+
+
+
 ## 同梱のワークフローについて
 
 ワークフローは `Advanced Settings` の最下部で切り替えることができます。
