@@ -31,39 +31,43 @@
 
 ## 主な機能
 
-- LAN 内の Windows PC にスマホからアクセスして画像生成ができる
+- LAN内のComfyUIにスマホからアクセスしてシンプルなユーザーインターフェイスで画像生成ができる
 - タグのオートコンプリート機能
 - 登録済みプロンプトの呼び出し機能
 - ワークフローを自由に追加・カスタマイズ可能
 
 ## 動作要件
 
-- ComfyUI が動作する Windows または Mac
-- 同一ネットワーク内、または VPN 経由で PC に到達できるスマホ/PC
-- ComfyUI を `--enable-cors-header` 付きで起動していること
+- ComfyUIが動作するWindowsまたはMac
+- 同一ネットワーク内、またはVPN経由で上記PCに到達できるスマホ/PC
+- ComfyUIを `--enable-cors-header` 付きで起動していること
 
 ## インストール方法
 
 ### ComfyUI側の事前準備
 
-ComfyUIの起動オプションに `--enable-cors-header` を付けて起動してください。
+ComfyUIの起動オプションに下記を付けて起動してください。
 
-### ダウンロードと展開
+- `--enable-cors-header`
+- `--listen {ComfyUIが起動しているPCのIPアドレス}`
 
-[Release](https://github.com/da2el-ai/simple-comfyui-gui/releases/) から自分のOSに合ったZIPファイルをダウンロードしてください。
-
-ZIPファイルを展開し、`Simple ComfyUI GUI`という実行ファイルを起動します。
-
-<img src="./img/icon.png">
+`127.0.0.1` や `localhost` だと他の端末からアクセスできません。<br>
+`192.168.xxx.xxx` のようなLAN内のアドレス、またはTailscaleによって割り当てられたIPアドレスを使ってください。
 
 
-### ComfyUIのURLを入力して起動
 
-<img src="./img/gui.png">
+### ダウンロードと起動
 
-`ComfyUI URL` にComfyUIのURLを入力し `ComfyUIに接続` をクリックします。接続成功するとスマホからアクセスするためのQRコードが表示されます。
+1. [Release](https://github.com/da2el-ai/simple-comfyui-gui/releases/) から自分のOSに合ったZIPファイルをダウンロード
 
-PCから動作確認をしたければ `SimpleComfyUI を起動` をクリックすればブラウザからアクセスできます。
+1. ZIPファイルを展開し、実行ファイル `Simple ComfyUI GUI` を起動<br><img src="./img/icon.png">
+
+1. `ComfyUI URL` にComfyUIのURLを入力し `ComfyUIに接続` をクリック<br><img src="./img/gui.png">
+
+1. 接続成功するとスマホからアクセスするためのQRコードが表示される
+1. スマホでQRコードを読み取りサイトを開く
+
+※PCから動作確認をしたければ `SimpleComfyUI を起動` をクリックすればブラウザからアクセスできます。
 
 ### 外出先からアクセスするには
 
@@ -76,14 +80,15 @@ VPNが必要です。個人的には Tailscale が簡単でおすすめです。
 
 ### 接続できない
 
-- URL に `/` の付け忘れ、ポート番号の間違いがないか確認してください
-- ComfyUI 側が起動中か確認してください
-- Windows ファイアウォールで ComfyUI のポートがブロックされていないか確認してください
+- URLが `127.0.0.1` や `localhost` だと接続できません
+- URLに `/` の付け忘れ、ポート番号の間違いがないか確認してください
+- ComfyUIが起動中か確認してください
+- WindowsファイアウォールでComfyUIのポートがブロックされていないか確認してください
 
 ### 画像生成できない
 
 - 使用中ワークフローに必要なカスタムノードがインストールされているか確認してください
-- ワークフロー設定 YAML の `required` / `optional` の対応先が実ワークフローと一致しているか確認してください
+- ワークフロー設定YAMLの `required` / `optional` の対応先が実ワークフローと一致しているか確認してください
 
 
 ## プロンプトオートコンプリート
@@ -91,7 +96,7 @@ VPNが必要です。個人的には Tailscale が簡単でおすすめです。
 プロンプトの補間機能を使うには `{インストールフォルダ}/tags/autocomplete.csv` を用意する必要があります。
 
 QRコードの下、「オートコンプリートタグファイルを作成」をクリックすると作成されます。<br>
-[ComfyUI-Custom-Scripts](https://github.com/pythongosssss/ComfyUI-Custom-Scripts) の [Gist](https://gist.githubusercontent.com/pythongosssss/1d3efa6050356a08cea975183088159a/raw/a18fb2f94f9156cf4476b0c24a09544d6c0baec6/danbooru-tags.txt) から取得して保存します。
+これは [ComfyUI-Custom-Scripts](https://github.com/pythongosssss/ComfyUI-Custom-Scripts) の [Gist](https://gist.githubusercontent.com/pythongosssss/1d3efa6050356a08cea975183088159a/raw/a18fb2f94f9156cf4476b0c24a09544d6c0baec6/danbooru-tags.txt) から取得しています。
 
 <img src="./img/save-tag.png">
 
@@ -127,11 +132,10 @@ QRコードの下、「オートコンプリートタグファイルを作成」
 
 自分が普段使っているワークフローを使うことも可能です。
 
-### ワークフローの書き出し方
-
-1. ComfyUIのメニューから「Export (API)」で保存します。
-2. 保存したワークフローを、`{Simple ComfyUI GUIインストールフォルダ}/workflow/` フォルダに移動します。
-3. ワークフローと同名のYAMLファイルを作成します。既存のYAMLファイルを複製して編集してもOKです。
+1. ComfyUIのメニューから `Export (API)` で保存
+1. 保存したワークフローを、`{Simple ComfyUI GUIインストールフォルダ}/workflow/` フォルダに移動
+1. 既存のYAMLファイルを複製して、名前を `{ワークフローのファイル名}.yaml` に変更
+1. ワークフローの内容にあわせてYAMLファイルを編集
 
 ```
 +-- Simple ComfyUI GUI
@@ -166,11 +170,14 @@ QRコードの下、「オートコンプリートタグファイルを作成」
 
 ### ワークフロー設定ファイル（YAML）
 
-ワークフロー設定（YAML）のパラメーターです。
+ワークフローをSimpleComfyUIで使用するための設定ファイルです。<br>
+ワークフローの内容に合わせて変更する必要があります。
 
 #### 画像を出力するノードのID（通常はKSampler）
 
 上記のワークフローでは `D2 KSampler` を使っているので、そのノードIDを記載します。
+
+[NAIDGenerator](https://github.com/bedovyy/ComfyUI_NAIDGenerator) のように画像を表示しないノードの場合は `Save Image` など画像保存ノードを指定してください。
 
 ```yaml
 output_node_id: 14
@@ -178,7 +185,7 @@ output_node_id: 14
 
 #### 必須の入力項目
 
-Positive / Negative プロンプト、Checkpoint ローダー、Seedです。
+Positive / Negativeプロンプト、Checkpointローダー、Seedです。
 
 ```yaml
 required:
@@ -213,8 +220,8 @@ required:
 Positiveプロンプトはワークフローでは下記のようになっています。<br>
 カスタムノードの名前は `D2 Prompt` ですが、表示名を `Positive` に変更しています。そのため `search_type: "title"` として表示名から検索しています。
 
-
 ```json
+# ワークフローのPositiveプロンプト入力部分
   "16": {
     "inputs": {
       "prompt": "1girl",
@@ -240,12 +247,12 @@ Positiveプロンプトはワークフローでは下記のようになってい
 - `input_name`: 入力名
 
 
-#### 追加ノード
+#### 追加の入力項目（optional）
 
 ワークフロー毎に追加できる設定項目です。
 
-下記はプルダウンメニュー、数値入力の例です。<br>
-`size_preset` では `D2 Size Selector` のプリセットを表示させるために `["D2 Size Selector", "input", "required", preset, 0]` という順番に探索しています。
+下記はプルダウンメニュー（Image Size Preset）と数値入力（Width）の例です。<br>
+`size_preset` では `D2 Size Selector` のプリセット名を `["D2 Size Selector", "input", "required", preset, 0]` という順番に辿って取得しています。
 
 ```
 optional:
