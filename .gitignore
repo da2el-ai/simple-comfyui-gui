@@ -1,6 +1,9 @@
 AI_INSTRUCTION
-runtime
-runtime/
+runtime/*
+!runtime/frontend/
+!runtime/frontend/**
+!runtime/frontend/assets/
+!runtime/frontend/assets/**
 !runtime/selector/
 !runtime/selector/**
 !runtime/workflow/
