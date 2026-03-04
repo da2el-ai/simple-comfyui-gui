@@ -26,8 +26,8 @@ export function useAutoCompleteTags() {
   }
 
   function filterTags(searchTerm: string, limit = 10): string[] {
-    if (searchTerm.length < 2) return []
-    const term = searchTerm.toLowerCase()
+    const term = searchTerm.trim().toLowerCase().replace(/ /g, '_')
+    if (term.length < 2) return []
     return tags.value.filter((tag) => tag.toLowerCase().includes(term)).slice(0, limit)
   }
 

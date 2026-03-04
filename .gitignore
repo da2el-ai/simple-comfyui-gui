@@ -1,9 +1,6 @@
 AI_INSTRUCTION
 runtime
-!runtime/
-runtime/*
-!runtime/frontend/
-!runtime/frontend/**
+runtime/
 !runtime/selector/
 !runtime/selector/**
 !runtime/workflow/
@@ -13,5 +10,3 @@ frontend/node_modules
 .claude
 simple-comfyui
 
-app/cmd/app/build/appicon.png
-app/cmd/app/build/darwin/Info.plist
