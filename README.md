@@ -9,7 +9,7 @@
 <table>
   <tr>
     <td>
-    <figure><img src="./img/top.png">
+    <figure><img src="./img/top_2.png">
     <figcaption>▲生成画面</figcaption></figure>
     </td>
     <td>
