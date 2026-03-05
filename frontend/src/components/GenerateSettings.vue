@@ -126,6 +126,7 @@ function startAutoSave(): void {
 
 <template>
   <section id="generate-settings">
+    <p v-if="currentWorkflow" class="text-sm text-gray-400 -mt-3 mb-4">Workflow: {{ currentWorkflow }}</p>
     <div class="mb-4">
       <div class="prompt-label-row">
         <label class="block text-sm font-medium mb-1">Positive Prompt</label>
