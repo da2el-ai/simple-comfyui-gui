@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import AutoComplete from './AutoComplete.vue'
 import DynamicInput from './DynamicInput.vue'
 import WeightButtons from './WeightButtons.vue'
@@ -10,6 +10,7 @@ import PromptSelector from './PromptSelector.vue'
 import { useGenerateSettings } from '../composables/useGenerateSettings'
 import { useImageGeneration } from '../composables/useImageGeneration'
 import { loadSettings, saveSettings, saveOptionalValues } from '../composables/useLocalSettings'
+import { useWeightAdjust } from '../composables/useWeightAdjust'
 
 // --- UI 専有の状態 ---
 const positive = ref('')
@@ -66,6 +67,36 @@ function closeGallery(): void {
   showGallery.value = false
 }
 
+// --- ウェイト調整（キーボードショートカット用） ---
+const { setWeight } = useWeightAdjust(positive, positiveTextareaRef)
+
+// --- キーボードショートカット ---
+function handleKeyDown(event: KeyboardEvent): void {
+  const isCtrl = event.ctrlKey || event.metaKey
+  if (!isCtrl) return
+
+  // ギャラリー表示中はギャラリー側のハンドラに任せる
+  if (showGallery.value) return
+
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    if (!loading.value && !isGenerating.value && workflowData.value && workflowConfig.value) {
+      void generateImages()
+    }
+  } else if (event.key === 'ArrowUp') {
+    event.preventDefault()
+    void setWeight(0.1)
+  } else if (event.key === 'ArrowDown') {
+    event.preventDefault()
+    void setWeight(-0.1)
+  } else if (event.key === 'g') {
+    event.preventDefault()
+    if (previewImages.value.length > 0) {
+      openGallery(0)
+    }
+  }
+}
+
 // どちらかのエラーメッセージを表示する
 const errorMessage = computed(
   () => settings.errorMessage.value || generation.errorMessage.value
@@ -83,6 +114,13 @@ onMounted(async () => {
 
   // 初期化後、設定変更の自動保存を開始する
   startAutoSave()
+
+  // キーボードショートカットを登録する
+  document.addEventListener('keydown', handleKeyDown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyDown)
 })
 
 function handleWorkflowChange(event: Event): void {
