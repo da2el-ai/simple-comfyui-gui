@@ -16,6 +16,14 @@ const emit = defineEmits<{
 <!--      <h2 class="preview-title">Preview</h2> -->
       <button type="button" class="preview-clear-btn" @click="emit('clear')">&times;</button>
     </div>
+
+    <details class="preview-latest" open>
+      <summary>Latest Image</summary>
+      <div class="preview-latest__body">
+        <img :key="props.images[0]" :src="props.images[0]" class="preview-latest__image" @click="emit('open', 0)" />
+      </div>
+    </details>
+
     <div class="preview-grid">
       <div
         v-for="(image, index) in props.images"
@@ -41,7 +49,7 @@ const emit = defineEmits<{
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  margin-bottom: 0.5rem;
+  /* margin-bottom: 0.5rem; */
 }
 
 .preview-title {
@@ -88,4 +96,20 @@ const emit = defineEmits<{
   object-fit: cover;
   aspect-ratio: 1 / 1;
 }
+
+.preview-latest{
+
+}
+
+.preview-latest__body{
+  padding: .5rem;
+}
+
+.preview-latest__image{
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  object-fit: contain;
+  cursor: pointer;
+}
+
 </style>
