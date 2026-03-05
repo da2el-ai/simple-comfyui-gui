@@ -17,7 +17,7 @@ function onInput(): void {
   if (!props.targetElement) return
   const textarea = props.targetElement
   const textBefore = textarea.value.substring(0, textarea.selectionStart)
-  const match = textBefore.match(/[0-9a-zA-Z_ ]+$/)
+  const match = textBefore.match(/[0-9a-zA-Z_ -]+$/)
 
   if (match && match[0].length >= 2) {
     filteredTags.value = filterTags(match[0])
@@ -38,7 +38,7 @@ function selectTag(tag: string): void {
   const cursor = textarea.selectionStart
   const value = textarea.value
   const textBefore = value.substring(0, cursor)
-  const match = textBefore.match(/[0-9a-zA-Z_ ]+$/)
+  const match = textBefore.match(/[0-9a-zA-Z_ -]+$/)
   if (!match) return
 
   const trimmedMatch = match[0].trimStart()
