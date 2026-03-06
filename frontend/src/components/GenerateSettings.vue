@@ -16,6 +16,7 @@ import { useWeightAdjust } from '../composables/useWeightAdjust'
 const positive = ref('')
 const negative = ref('')
 const batchCount = ref(1)
+const isPositiveExpanded = ref(false)
 const positiveTextareaRef = ref<HTMLTextAreaElement | null>(null)
 const negativeTextareaRef = ref<HTMLTextAreaElement | null>(null)
 
@@ -65,6 +66,10 @@ function openGallery(index: number): void {
 
 function closeGallery(): void {
   showGallery.value = false
+}
+
+function togglePositiveExpand(): void {
+  isPositiveExpanded.value = !isPositiveExpanded.value
 }
 
 // --- ウェイト調整（キーボードショートカット用） ---
@@ -176,10 +181,19 @@ function startAutoSave(): void {
           v-model="positive"
           placeholder="Enter your prompt here..."
           class="w-full p-2 border rounded-md resize-vertical"
+          :style="{ height: isPositiveExpanded ? '20em' : '8em' }"
           rows="4"
         ></textarea>
-        <AutoComplete v-model="positive" :target-element="positiveTextareaRef" />
+        
+        <button
+          type="button"
+          class="resize-btn text-sm"
+          @click="togglePositiveExpand"
+        >
+          {{ isPositiveExpanded ? '◤' : '◢' }}
+        </button>
       </div>
+      <AutoComplete v-model="positive" :target-element="positiveTextareaRef" />
     </div>
 
     <div class="flex gap-4 mb-4">
@@ -297,5 +311,16 @@ function startAutoSave(): void {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 4px;
+}
+
+.resize-btn{
+  position: absolute;
+  padding: 0;
+  right: 0.2rem;
+  bottom: 0.5rem;
+  border: none;
+  background: transparent;
+  font-size: .8rem;
+  line-height: 1;
 }
 </style>
