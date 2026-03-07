@@ -88,6 +88,10 @@ export function useGenerateSettings() {
     const savedValues = loadSettings().optionalValues[workflowName]
     if (savedValues) {
       for (const item of items) {
+        if (item.type === 'image') {
+          continue
+        }
+
         const saved = savedValues[item.id]
         if (saved === undefined) continue
         if (item.type === 'list') {
@@ -150,7 +154,7 @@ export function useGenerateSettings() {
     item: WorkflowConfigOptionalItem,
     options: string[]
   ): string | number {
-    if (item.input.type === 'image' || item.input.type === 'mask') {
+    if (item.input.type === 'image') {
       return ''
     }
 

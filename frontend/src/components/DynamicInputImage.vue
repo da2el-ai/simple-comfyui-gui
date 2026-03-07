@@ -4,12 +4,16 @@ import { onBeforeUnmount, ref, watch } from 'vue'
 interface Props {
   file: File | null
   hiddenValue: string | number
+  overlayDataUrl?: string
+  previewClickable?: boolean
   accept?: string
   dropText?: string
   buttonText?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  overlayDataUrl: '',
+  previewClickable: false,
   accept: 'image/*',
   dropText: 'ここに画像をドラッグ&ドロップ',
   buttonText: '画像を選択'
@@ -18,6 +22,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   (event: 'update:file', value: File | null): void
   (event: 'clear-hidden-value'): void
+  (event: 'preview-click'): void
 }>()
 
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -130,7 +135,29 @@ function handleDrop(event: DragEvent): void {
       </div>
 
       <div v-if="previewUrl" class="flex justify-center">
-        <img :src="previewUrl" alt="uploaded preview" class="max-h-60 rounded-md" />
+        <div class="relative inline-block">
+          <img
+            :src="previewUrl"
+            alt="uploaded preview"
+            class="max-h-60 rounded-md"
+            :class="props.previewClickable ? 'cursor-pointer' : ''"
+            @click="props.previewClickable ? emit('preview-click') : undefined"
+            @dragover="handleDragOver"
+            @dragleave="handleDragLeave"
+            @drop="handleDrop"
+          />
+          <img
+            v-if="props.overlayDataUrl"
+            :src="props.overlayDataUrl"
+            alt="mask overlay"
+            class="absolute inset-0 max-h-60 rounded-md pointer-events-none"
+            style="opacity: 0.5;"
+            @click="props.previewClickable ? emit('preview-click') : undefined"
+            @dragover="handleDragOver"
+            @dragleave="handleDragLeave"
+            @drop="handleDrop"
+          />
+        </div>
       </div>
 
       <div v-else class="text-sm text-gray-500 text-center py-6">

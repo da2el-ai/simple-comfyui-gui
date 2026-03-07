@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import DynamicInputImage from './DynamicInputImage.vue'
 
-type InputType = 'list' | 'text' | 'number' | 'textarea' | 'image' | 'mask'
+type InputType = 'list' | 'text' | 'number' | 'textarea' | 'image'
 
 interface Props {
   type: InputType
@@ -9,12 +9,14 @@ interface Props {
   value: string | number
   options?: string[]
   imageFile?: File | null
+  imageMaskOverlay?: string
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
   (event: 'update:value', value: string | number): void
   (event: 'update:image-file', value: File | null): void
+  (event: 'open-mask-editor'): void
 }>()
 </script>
 
@@ -56,14 +58,17 @@ const emit = defineEmits<{
     />
 
     <DynamicInputImage
-      v-if="props.type === 'image' || props.type === 'mask'"
+      v-if="props.type === 'image'"
       :file="props.imageFile ?? null"
       :hidden-value="props.value"
+      :overlay-data-url="props.imageMaskOverlay ?? ''"
+      :preview-clickable="true"
       accept="image/*"
-      :drop-text="props.type === 'mask' ? 'ここにマスク画像をドラッグ&ドロップ' : 'ここに画像をドラッグ&ドロップ'"
-      :button-text="props.type === 'mask' ? 'マスク画像を選択' : '画像を選択'"
+      drop-text="ここに画像をドラッグ&ドロップ"
+      button-text="画像を選択"
       @update:file="(file) => emit('update:image-file', file)"
       @clear-hidden-value="emit('update:value', '')"
+      @preview-click="emit('open-mask-editor')"
     />
   </div>
 </template>

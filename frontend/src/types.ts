@@ -1,4 +1,4 @@
-export type TDynamicInputType = 'list' | 'text' | 'number' | 'textarea' | 'image' | 'mask'
+export type TDynamicInputType = 'list' | 'text' | 'number' | 'textarea' | 'image'
 
 export type TDynamicInputItem = {
   id: string

@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import AutoComplete from './AutoComplete.vue'
 import DynamicInput from './DynamicInput.vue'
+import MaskEditor from './MaskEditor.vue'
 import WeightButtons from './WeightButtons.vue'
 import ImagePreview from './ImagePreview.vue'
 import ImageGallery from './ImageGallery.vue'
@@ -11,12 +12,18 @@ import { useGenerateSettings } from '../composables/useGenerateSettings'
 import { useImageGeneration } from '../composables/useImageGeneration'
 import { loadSettings, saveSettings, saveOptionalValues } from '../composables/useLocalSettings'
 import { useWeightAdjust } from '../composables/useWeightAdjust'
+import { uploadImage, uploadImageWithOptions, uploadMask } from '../services/backendApi'
+import type { ComfyOriginalRef } from '../types/api'
 
 // --- UI 専有の状態 ---
 const positive = ref('')
 const negative = ref('')
 const batchCount = ref(1)
 const imageFileMap = ref<Record<string, File | null>>({})
+const imageOriginalRefMap = ref<Record<string, ComfyOriginalRef | null>>({})
+const maskOverlayDataUrl = ref('')
+const isMaskEditorOpen = ref(false)
+const activeImageInputId = ref('')
 const isPositiveExpanded = ref(false)
 const positiveTextareaRef = ref<HTMLTextAreaElement | null>(null)
 const negativeTextareaRef = ref<HTMLTextAreaElement | null>(null)
@@ -42,7 +49,6 @@ const generation = useImageGeneration({
   workflowData: settings.workflowData,
   currentCheckpoint: settings.currentCheckpoint,
   optionalItems: settings.optionalItems,
-  imageFileMap,
   positive,
   negative,
   batchCount
@@ -138,11 +144,204 @@ function handleWorkflowChange(event: Event): void {
   void settings.changeWorkflow(nextWorkflow)
 }
 
-function handleOptionalImageFileChange(itemId: string, imageFile: File | null): void {
+async function handleOptionalImageFileChange(itemId: string, imageFile: File | null): Promise<void> {
   imageFileMap.value = {
     ...imageFileMap.value,
     [itemId]: imageFile
   }
+
+  if (!imageFile) {
+    handleOptionalValueChange(itemId, '')
+    imageOriginalRefMap.value = {
+      ...imageOriginalRefMap.value,
+      [itemId]: null
+    }
+    clearMaskState()
+    return
+  }
+
+  if (!settings.endpoint.value) {
+    return
+  }
+
+  try {
+    const uploaded = await uploadImage(settings.endpoint.value, imageFile)
+    const normalizedSubfolder = uploaded.subfolder ? `${uploaded.subfolder}/` : ''
+    const uploadedPath = `${normalizedSubfolder}${uploaded.name}`
+
+    handleOptionalValueChange(itemId, uploadedPath)
+    imageOriginalRefMap.value = {
+      ...imageOriginalRefMap.value,
+      [itemId]: {
+        filename: uploaded.name,
+        subfolder: uploaded.subfolder,
+        type: uploaded.type
+      }
+    }
+
+  } catch (error) {
+    handleOptionalValueChange(itemId, '')
+  }
+
+  clearMaskState()
+}
+
+function openMaskEditor(itemId: string): void {
+  if (!imageFileMap.value[itemId]) {
+    return
+  }
+  activeImageInputId.value = itemId
+  isMaskEditorOpen.value = true
+}
+
+function closeMaskEditor(): void {
+  isMaskEditorOpen.value = false
+}
+
+async function handleMaskSave(payload: { maskFile: File; overlayDataUrl: string }): Promise<void> {
+  maskOverlayDataUrl.value = payload.overlayDataUrl
+
+  if (!settings.endpoint.value) {
+    isMaskEditorOpen.value = false
+    return
+  }
+
+  const originalRef = imageOriginalRefMap.value[activeImageInputId.value] ?? null
+  if (!originalRef) {
+    isMaskEditorOpen.value = false
+    return
+  }
+
+  const sourceImageFile = imageFileMap.value[activeImageInputId.value] ?? null
+  if (!sourceImageFile) {
+    isMaskEditorOpen.value = false
+    return
+  }
+
+  try {
+    const timestamp = Date.now()
+
+    const clipspaceMaskFile = await renameFile(payload.maskFile, `clipspace-mask-${timestamp}.png`)
+    const clipspacePaintFile = await createTransparentImageFile(sourceImageFile, `clipspace-paint-${timestamp}.png`)
+    const clipspacePaintedFile = await renameFile(
+      sourceImageFile,
+      `clipspace-painted-${timestamp}.png`
+    )
+    const clipspacePaintedMaskedFile = await renameFile(
+      payload.maskFile,
+      `clipspace-painted-masked-${timestamp}.png`
+    )
+
+    await uploadMask(
+      settings.endpoint.value,
+      clipspaceMaskFile,
+      originalRef,
+      'input',
+      'clipspace'
+    )
+
+    await uploadImageWithOptions(settings.endpoint.value, clipspacePaintFile, {
+      uploadType: 'input',
+      subfolder: 'clipspace',
+      originalRef
+    })
+
+    const uploadedPainted = await uploadImageWithOptions(settings.endpoint.value, clipspacePaintedFile, {
+      uploadType: 'input',
+      subfolder: 'clipspace',
+      originalRef
+    })
+
+    const secondOriginalRef: ComfyOriginalRef = {
+      filename: uploadedPainted.name,
+      subfolder: uploadedPainted.subfolder,
+      type: uploadedPainted.type
+    }
+
+    const uploadedMask2 = await uploadMask(
+      settings.endpoint.value,
+      clipspacePaintedMaskedFile,
+      secondOriginalRef,
+      'input',
+      'clipspace'
+    )
+
+    const normalizedMaskedSubfolder = uploadedMask2.subfolder ? `${uploadedMask2.subfolder}/` : ''
+    const maskedImagePath = `${normalizedMaskedSubfolder}${uploadedMask2.name}`
+
+    handleOptionalValueChange(activeImageInputId.value, maskedImagePath)
+
+  } catch {
+  }
+
+  isMaskEditorOpen.value = false
+}
+
+function clearMaskState(): void {
+  maskOverlayDataUrl.value = ''
+}
+
+async function renameFile(source: File, nextName: string): Promise<File> {
+  const content = await source.arrayBuffer()
+  return new File([content], nextName, { type: source.type || 'image/png' })
+}
+
+function createTransparentImageFile(sourceImageFile: File, fileName: string): Promise<File> {
+  return createCanvasFile(sourceImageFile, fileName, (ctx, width, height) => {
+    ctx.clearRect(0, 0, width, height)
+  })
+}
+
+async function createCanvasFile(
+  sourceImageFile: File,
+  fileName: string,
+  painter: (ctx: CanvasRenderingContext2D, width: number, height: number) => void | Promise<void>
+): Promise<File> {
+  const image = await loadImageFromFile(sourceImageFile)
+  const width = image.naturalWidth || image.width
+  const height = image.naturalHeight || image.height
+
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+
+  const ctx = canvas.getContext('2d')
+  if (!ctx) {
+    throw new Error('canvas contextの取得に失敗しました')
+  }
+
+  await painter(ctx, width, height)
+
+  const blob = await canvasToBlob(canvas)
+  return new File([blob], fileName, { type: 'image/png' })
+}
+
+function loadImageFromFile(file: File): Promise<HTMLImageElement> {
+  const objectUrl = URL.createObjectURL(file)
+  return new Promise((resolve, reject) => {
+    const image = new Image()
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+      resolve(image)
+    }
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error('画像ファイルの読み込みに失敗しました'))
+    }
+    image.src = objectUrl
+  })
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('画像出力に失敗しました'))
+        return
+      }
+      resolve(blob)
+    }, 'image/png')
+  })
 }
 
 // --- 自動保存 ---
@@ -293,10 +492,20 @@ function startAutoSave(): void {
             :value="item.value"
             :options="item.options"
             :image-file="imageFileMap[item.id] ?? null"
+            :image-mask-overlay="item.type === 'image' ? maskOverlayDataUrl : ''"
             @update:value="(value) => handleOptionalValueChange(item.id, value)"
             @update:image-file="(file) => handleOptionalImageFileChange(item.id, file)"
+            @open-mask-editor="openMaskEditor(item.id)"
           />
         </template>
+
+        <MaskEditor
+          :open="isMaskEditorOpen"
+          :image-file="imageFileMap[activeImageInputId] ?? null"
+          :initial-mask-data-url="maskOverlayDataUrl"
+          @close="closeMaskEditor"
+          @save="handleMaskSave"
+        />
 
         <div class="w-full">
           <label class="block text-sm font-medium mb-1">Workflow</label>

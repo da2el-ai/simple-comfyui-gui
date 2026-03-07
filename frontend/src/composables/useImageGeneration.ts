@@ -11,13 +11,7 @@ import type {
   WorkflowNode,
   WorkflowSearchType
 } from '../types/api'
-import {
-  fetchPromptHistory,
-  fetchQueue,
-  deleteQueueItems,
-  submitPrompt,
-  uploadImage
-} from '../services/backendApi'
+import { fetchPromptHistory, fetchQueue, deleteQueueItems, submitPrompt } from '../services/backendApi'
 
 export interface ImageGenerationDeps {
   endpoint: Ref<string>
@@ -25,7 +19,6 @@ export interface ImageGenerationDeps {
   workflowData: Ref<WorkflowData | null>
   currentCheckpoint: Ref<string>
   optionalItems: Ref<TDynamicInputItem[]>
-  imageFileMap: Ref<Record<string, File | null>>
   positive: Ref<string>
   negative: Ref<string>
   batchCount: Ref<number>
@@ -139,8 +132,6 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
   }
 
   async function buildOptionalValueMap(): Promise<Record<string, string | number>> {
-    await resolveImageInputs()
-
     const valueMap: Record<string, string | number> = {}
 
     for (const item of deps.optionalItems.value) {
@@ -151,23 +142,6 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     }
 
     return valueMap
-  }
-
-  async function resolveImageInputs(): Promise<void> {
-    for (const item of deps.optionalItems.value) {
-      if (item.type !== 'image') {
-        continue
-      }
-
-      const selectedFile = deps.imageFileMap.value[item.id]
-      if (!selectedFile) {
-        throw new Error(`${item.title} の画像が未選択です`)
-      }
-
-      const uploaded = await uploadImage(deps.endpoint.value, selectedFile)
-      const normalizedSubfolder = uploaded.subfolder ? `${uploaded.subfolder}/` : ''
-      item.value = `${normalizedSubfolder}${uploaded.name}`
-    }
   }
 
   function cloneWorkflow(source: WorkflowData): WorkflowData {

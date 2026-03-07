@@ -6,7 +6,7 @@ export type ComfyUIEndpointResponse = {
   endpoint: string
 }
 
-export type DynamicInputType = 'list' | 'text' | 'number' | 'textarea' | 'image' | 'mask'
+export type DynamicInputType = 'list' | 'text' | 'number' | 'textarea' | 'image'
 
 export type WorkflowSearchType = 'class_type' | 'id' | 'title'
 
@@ -58,6 +58,12 @@ export type ComfyImageFile = {
 
 export type ComfyUploadImageResponse = {
   name: string
+  subfolder: string
+  type: string
+}
+
+export type ComfyOriginalRef = {
+  filename: string
   subfolder: string
   type: string
 }

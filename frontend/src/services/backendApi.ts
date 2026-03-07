@@ -1,4 +1,5 @@
 import type {
+  ComfyOriginalRef,
   ComfyObjectInfo,
   ComfyQueue,
   ComfyUploadImageResponse,
@@ -131,9 +132,31 @@ export async function deleteQueueItems(endpoint: string, ids: string[]): Promise
 }
 
 export async function uploadImage(endpoint: string, imageFile: File): Promise<ComfyUploadImageResponse> {
+  return uploadImageWithOptions(endpoint, imageFile)
+}
+
+export async function uploadImageWithOptions(
+  endpoint: string,
+  imageFile: File,
+  options?: {
+    uploadType?: string
+    subfolder?: string
+    originalRef?: ComfyOriginalRef
+  }
+): Promise<ComfyUploadImageResponse> {
   const formData = new FormData()
   formData.append('image', imageFile)
-  formData.append('type', 'input')
+
+  const uploadType = options?.uploadType ?? 'input'
+  formData.append('type', uploadType)
+
+  if (options?.subfolder) {
+    formData.append('subfolder', options.subfolder)
+  }
+
+  if (options?.originalRef) {
+    formData.append('original_ref', JSON.stringify(options.originalRef))
+  }
 
   const response = await fetch(`${endpoint}/upload/image`, {
     method: 'POST',
@@ -143,6 +166,32 @@ export async function uploadImage(endpoint: string, imageFile: File): Promise<Co
   if (!response.ok) {
     const errorText = await response.text()
     throw new Error(`image uploadに失敗しました: ${response.status} ${errorText}`)
+  }
+
+  return (await response.json()) as ComfyUploadImageResponse
+}
+
+export async function uploadMask(
+  endpoint: string,
+  maskFile: File,
+  originalRef: ComfyOriginalRef,
+  uploadType = 'input',
+  subfolder = 'clipspace'
+): Promise<ComfyUploadImageResponse> {
+  const formData = new FormData()
+  formData.append('image', maskFile)
+  formData.append('original_ref', JSON.stringify(originalRef))
+  formData.append('type', uploadType)
+  formData.append('subfolder', subfolder)
+
+  const response = await fetch(`${endpoint}/upload/mask`, {
+    method: 'POST',
+    body: formData
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`mask uploadに失敗しました: ${response.status} ${errorText}`)
   }
 
   return (await response.json()) as ComfyUploadImageResponse
