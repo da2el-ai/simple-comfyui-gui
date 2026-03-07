@@ -6,7 +6,7 @@ export type ComfyUIEndpointResponse = {
   endpoint: string
 }
 
-export type DynamicInputType = 'list' | 'text' | 'number' | 'textarea' | 'image'
+export type DynamicInputType = 'list' | 'text' | 'number' | 'textarea' | 'image' | 'seed'
 
 export type WorkflowSearchType = 'class_type' | 'id' | 'title'
 

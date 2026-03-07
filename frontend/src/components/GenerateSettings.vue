@@ -115,6 +115,10 @@ const errorMessage = computed(
   () => settings.errorMessage.value || generation.errorMessage.value
 )
 
+const visibleOptionalItems = computed(() =>
+  optionalItems.value.filter((item) => item.type !== 'seed')
+)
+
 onMounted(async () => {
   // 保存済み設定を読み込んで UI 状態に反映する
   const saved = loadSettings()
@@ -367,7 +371,11 @@ function startAutoSave(): void {
     optionalItems,
     (items) => {
       if (!currentWorkflow.value || items.length === 0) return
-      const values = Object.fromEntries(items.map((item) => [item.id, item.value]))
+      const values = Object.fromEntries(
+        items
+          .filter((item) => item.type !== 'seed')
+          .map((item) => [item.id, item.value])
+      )
       saveOptionalValues(currentWorkflow.value, values)
     },
     { deep: true }
@@ -485,7 +493,7 @@ function startAutoSave(): void {
           />
         </div>
 
-        <template v-for="item in optionalItems" :key="item.id">
+        <template v-for="item in visibleOptionalItems" :key="item.id">
           <DynamicInput
             :type="item.type"
             :title="item.title"

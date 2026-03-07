@@ -88,7 +88,7 @@ export function useGenerateSettings() {
     const savedValues = loadSettings().optionalValues[workflowName]
     if (savedValues) {
       for (const item of items) {
-        if (item.type === 'image') {
+        if (item.type === 'image' || item.type === 'seed') {
           continue
         }
 
@@ -156,6 +156,10 @@ export function useGenerateSettings() {
   ): string | number {
     if (item.input.type === 'image') {
       return ''
+    }
+
+    if (item.input.type === 'seed') {
+      return Math.floor(Math.random() * 1_000_000_000)
     }
 
     if (item.input.type === 'list') {

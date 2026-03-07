@@ -52,9 +52,9 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
 
     try {
       const promptIds: string[] = []
-      const resolvedOptionalValueMap = await buildOptionalValueMap()
 
       for (let index = 0; index < deps.batchCount.value; index += 1) {
+        const resolvedOptionalValueMap = await buildOptionalValueMap()
         const promptWorkflow = buildPromptWorkflow(resolvedOptionalValueMap)
         const response = await submitPrompt(endpoint.value, promptWorkflow)
         promptIds.push(response.prompt_id)
@@ -135,6 +135,11 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     const valueMap: Record<string, string | number> = {}
 
     for (const item of deps.optionalItems.value) {
+      if (item.type === 'seed') {
+        valueMap[item.id] = Math.floor(Math.random() * 1_000_000_000)
+        continue
+      }
+
       if (item.value === '') {
         continue
       }

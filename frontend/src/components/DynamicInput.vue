@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import DynamicInputImage from './DynamicInputImage.vue'
 
-type InputType = 'list' | 'text' | 'number' | 'textarea' | 'image'
+type InputType = 'list' | 'text' | 'number' | 'textarea' | 'image' | 'seed'
 
 interface Props {
   type: InputType
