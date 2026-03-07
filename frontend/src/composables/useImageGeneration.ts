@@ -1,9 +1,9 @@
 import { ref, type Ref } from 'vue'
 import { toErrorMessage } from './useAsyncState'
-import type { TDynamicInputItem } from '../types'
 import type {
   ComfyImageFile,
   PromptHistory,
+  TDynamicInputItem,
   WorkflowConfig,
   WorkflowConfigOptionalItem,
   WorkflowConfigRequiredItem,

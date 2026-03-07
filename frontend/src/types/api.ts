@@ -8,6 +8,14 @@ export type ComfyUIEndpointResponse = {
 
 export type DynamicInputType = 'list' | 'text' | 'number' | 'textarea' | 'image' | 'seed'
 
+export type TDynamicInputItem = {
+  id: string
+  title: string
+  type: DynamicInputType
+  options: string[]
+  value: string | number
+}
+
 export type WorkflowSearchType = 'class_type' | 'id' | 'title'
 
 export type WorkflowConfigRequiredItem = {

@@ -1,8 +1,8 @@
 import { ref } from 'vue'
 import yaml from 'js-yaml'
-import type { TDynamicInputItem } from '../types'
 import type {
   ComfyObjectInfo,
+  TDynamicInputItem,
   WorkflowConfig,
   WorkflowConfigOptionalItem,
   WorkflowData
