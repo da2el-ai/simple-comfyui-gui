@@ -113,6 +113,16 @@ QRコードの下、「オートコンプリートタグファイルを作成」
 <img src="./img/prompt-selector-edit.png">
 
 
+## インペイント
+
+同梱のワークフロー `D2_img2img` を使ってください。<br>
+`Advanced Settings` を開くと画像読み込みツールがあります。
+
+読み込んだ画像をクリックするとマスクエディタが起動します。
+
+<img src="./img/inpaint.png">
+
+
 ## キーボードショートカット
 
 `Ctrl` と表記しているものは Mac では `Command` にも対応しています。
@@ -138,10 +148,14 @@ QRコードの下、「オートコンプリートタグファイルを作成」
 
 ワークフローは `Advanced Settings` の最下部で切り替えることができます。
 
-- `Simple_t2i`
+- `Simple_txt2img`
   - 標準ノードのみを使用したシンプルなtxt2imgワークフローです。
   - ComfyUIの初期画面で出てくるものと同じです。
-- `D2_t2i`
+- `D2_txt2img`
+  - 拙作[D2 Nodes](https://github.com/da2el-ai/d2-nodes-comfyui)のインストールが必要です。
+  - 画像の保存先を[Eagle](https://jp.eagle.cool/)にしています。
+- `D2_img2img`
+  - img2imgとインペイントを行うワークフローです。
   - 拙作[D2 Nodes](https://github.com/da2el-ai/d2-nodes-comfyui)のインストールが必要です。
   - 画像の保存先を[Eagle](https://jp.eagle.cool/)にしています。
 
@@ -305,6 +319,8 @@ optional:
   - `textarea`: 複数行テキスト
   - `number`: 数値
   - `list`: リスト
+  - `image`: 画像読み込み
+  - `seed`: 乱数
 - `default`: 初期状態で表示する内容
 - `value`: 初期状態で表示する内容。リストなど変更不可なもので使う
   -  カスタムノードから値を取得するにはワークフローを辿る配列を指定する。 
