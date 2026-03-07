@@ -11,7 +11,13 @@ import type {
   WorkflowNode,
   WorkflowSearchType
 } from '../types/api'
-import { fetchPromptHistory, fetchQueue, deleteQueueItems, submitPrompt } from '../services/backendApi'
+import {
+  fetchPromptHistory,
+  fetchQueue,
+  deleteQueueItems,
+  submitPrompt,
+  uploadImage
+} from '../services/backendApi'
 
 export interface ImageGenerationDeps {
   endpoint: Ref<string>
@@ -19,6 +25,7 @@ export interface ImageGenerationDeps {
   workflowData: Ref<WorkflowData | null>
   currentCheckpoint: Ref<string>
   optionalItems: Ref<TDynamicInputItem[]>
+  imageFileMap: Ref<Record<string, File | null>>
   positive: Ref<string>
   negative: Ref<string>
   batchCount: Ref<number>
@@ -52,9 +59,10 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
 
     try {
       const promptIds: string[] = []
+      const resolvedOptionalValueMap = await buildOptionalValueMap()
 
       for (let index = 0; index < deps.batchCount.value; index += 1) {
-        const promptWorkflow = buildPromptWorkflow()
+        const promptWorkflow = buildPromptWorkflow(resolvedOptionalValueMap)
         const response = await submitPrompt(endpoint.value, promptWorkflow)
         promptIds.push(response.prompt_id)
         queueCount.value = promptIds.length
@@ -105,14 +113,13 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
 
   // --- 内部: プロンプトワークフロー構築 ---
 
-  function buildPromptWorkflow(): WorkflowData {
+  function buildPromptWorkflow(optionalValueMap: Record<string, string | number>): WorkflowData {
     const { workflowData } = deps
     if (!workflowData.value) {
       throw new Error('workflowデータが未初期化です')
     }
 
     const promptWorkflow = cloneWorkflow(workflowData.value)
-    const optionalValueMap = buildOptionalValueMap()
 
     setNodeValueByConfig(promptWorkflow, 'required', 'positive', deps.positive.value)
     setNodeValueByConfig(promptWorkflow, 'required', 'negative', deps.negative.value)
@@ -131,7 +138,9 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     return promptWorkflow
   }
 
-  function buildOptionalValueMap(): Record<string, string | number> {
+  async function buildOptionalValueMap(): Promise<Record<string, string | number>> {
+    await resolveImageInputs()
+
     const valueMap: Record<string, string | number> = {}
 
     for (const item of deps.optionalItems.value) {
@@ -142,6 +151,23 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     }
 
     return valueMap
+  }
+
+  async function resolveImageInputs(): Promise<void> {
+    for (const item of deps.optionalItems.value) {
+      if (item.type !== 'image') {
+        continue
+      }
+
+      const selectedFile = deps.imageFileMap.value[item.id]
+      if (!selectedFile) {
+        throw new Error(`${item.title} の画像が未選択です`)
+      }
+
+      const uploaded = await uploadImage(deps.endpoint.value, selectedFile)
+      const normalizedSubfolder = uploaded.subfolder ? `${uploaded.subfolder}/` : ''
+      item.value = `${normalizedSubfolder}${uploaded.name}`
+    }
   }
 
   function cloneWorkflow(source: WorkflowData): WorkflowData {

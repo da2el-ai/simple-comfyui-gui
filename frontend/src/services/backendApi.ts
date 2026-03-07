@@ -1,6 +1,7 @@
 import type {
   ComfyObjectInfo,
   ComfyQueue,
+  ComfyUploadImageResponse,
   ComfyUIEndpointResponse,
   PromptHistory,
   PromptResponse,
@@ -127,6 +128,24 @@ export async function deleteQueueItems(endpoint: string, ids: string[]): Promise
   if (!response.ok) {
     throw new Error(`queue削除に失敗しました: ${response.status}`)
   }
+}
+
+export async function uploadImage(endpoint: string, imageFile: File): Promise<ComfyUploadImageResponse> {
+  const formData = new FormData()
+  formData.append('image', imageFile)
+  formData.append('type', 'input')
+
+  const response = await fetch(`${endpoint}/upload/image`, {
+    method: 'POST',
+    body: formData
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`image uploadに失敗しました: ${response.status} ${errorText}`)
+  }
+
+  return (await response.json()) as ComfyUploadImageResponse
 }
 
 // ─── PromptSelector API ────────────────────────────────────────────────────────

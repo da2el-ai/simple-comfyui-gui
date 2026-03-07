@@ -1,16 +1,20 @@
 <script setup lang="ts">
-type InputType = 'list' | 'text' | 'number' | 'textarea'
+import DynamicInputImage from './DynamicInputImage.vue'
+
+type InputType = 'list' | 'text' | 'number' | 'textarea' | 'image' | 'mask'
 
 interface Props {
   type: InputType
   title: string
   value: string | number
   options?: string[]
+  imageFile?: File | null
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
   (event: 'update:value', value: string | number): void
+  (event: 'update:image-file', value: File | null): void
 }>()
 </script>
 
@@ -49,6 +53,17 @@ const emit = defineEmits<{
       @input="emit('update:value', ($event.target as HTMLTextAreaElement).value)"
       class="w-full p-2 border rounded-md resize-vertical"
       rows="3"
+    />
+
+    <DynamicInputImage
+      v-if="props.type === 'image' || props.type === 'mask'"
+      :file="props.imageFile ?? null"
+      :hidden-value="props.value"
+      accept="image/*"
+      :drop-text="props.type === 'mask' ? 'ここにマスク画像をドラッグ&ドロップ' : 'ここに画像をドラッグ&ドロップ'"
+      :button-text="props.type === 'mask' ? 'マスク画像を選択' : '画像を選択'"
+      @update:file="(file) => emit('update:image-file', file)"
+      @clear-hidden-value="emit('update:value', '')"
     />
   </div>
 </template>

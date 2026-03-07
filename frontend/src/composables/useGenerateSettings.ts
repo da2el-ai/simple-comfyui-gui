@@ -150,6 +150,10 @@ export function useGenerateSettings() {
     item: WorkflowConfigOptionalItem,
     options: string[]
   ): string | number {
+    if (item.input.type === 'image' || item.input.type === 'mask') {
+      return ''
+    }
+
     if (item.input.type === 'list') {
       if (typeof item.input.default === 'string' && options.includes(item.input.default)) {
         return item.input.default

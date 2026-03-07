@@ -16,6 +16,7 @@ import { useWeightAdjust } from '../composables/useWeightAdjust'
 const positive = ref('')
 const negative = ref('')
 const batchCount = ref(1)
+const imageFileMap = ref<Record<string, File | null>>({})
 const isPositiveExpanded = ref(false)
 const positiveTextareaRef = ref<HTMLTextAreaElement | null>(null)
 const negativeTextareaRef = ref<HTMLTextAreaElement | null>(null)
@@ -41,6 +42,7 @@ const generation = useImageGeneration({
   workflowData: settings.workflowData,
   currentCheckpoint: settings.currentCheckpoint,
   optionalItems: settings.optionalItems,
+  imageFileMap,
   positive,
   negative,
   batchCount
@@ -134,6 +136,13 @@ function handleWorkflowChange(event: Event): void {
   }
   const nextWorkflow = (event.target as HTMLSelectElement).value
   void settings.changeWorkflow(nextWorkflow)
+}
+
+function handleOptionalImageFileChange(itemId: string, imageFile: File | null): void {
+  imageFileMap.value = {
+    ...imageFileMap.value,
+    [itemId]: imageFile
+  }
 }
 
 // --- 自動保存 ---
@@ -283,7 +292,9 @@ function startAutoSave(): void {
             :title="item.title"
             :value="item.value"
             :options="item.options"
+            :image-file="imageFileMap[item.id] ?? null"
             @update:value="(value) => handleOptionalValueChange(item.id, value)"
+            @update:image-file="(file) => handleOptionalImageFileChange(item.id, file)"
           />
         </template>
 
