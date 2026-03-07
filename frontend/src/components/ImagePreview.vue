@@ -14,7 +14,7 @@ const emit = defineEmits<{
   <div v-if="props.images.length > 0" class="preview-container">
     <div class="preview-header">
 <!--      <h2 class="preview-title">Preview</h2> -->
-      <button type="button" class="preview-clear-btn" @click="emit('clear')">&times;</button>
+      <button type="button" class="btn-close" @click="emit('clear')">&times;</button>
     </div>
 
     <details class="preview-latest" open>
@@ -58,19 +58,6 @@ const emit = defineEmits<{
   margin: 0;
 }
 
-.preview-clear-btn {
-  background: transparent;
-  border: none;
-  font-size: 1.25rem;
-  line-height: 1;
-  color: #9ca3af;
-  cursor: pointer;
-  padding: 0 2px;
-}
-
-.preview-clear-btn:hover {
-  color: #ef4444;
-}
 
 .preview-grid {
   display: grid;
