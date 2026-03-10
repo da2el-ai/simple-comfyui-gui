@@ -23,9 +23,22 @@ img{
 }
 
 .container {
-  max-width: 920px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 24px;
+}
+
+.main-settings{
+  display: grid;
+  grid-template-columns: 1fr 40%;
+  column-gap: 2rem;  
+  row-gap: 1rem;  
+}
+
+@media (max-width: 940px) {
+  .main-settings {
+    grid-template-columns: 1fr;
+  }
 }
 
 .mx-auto {

@@ -39,7 +39,7 @@ const emit = defineEmits<{
 
 <style scoped>
 .preview-container {
-  margin-top: 1rem;
+  /* margin-top: 1rem; */
   border: 1px solid #c4cad7;
   border-radius: 10px;
   padding: 12px;
