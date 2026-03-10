@@ -27,6 +27,12 @@
     <figcaption>▲プロンプトセレクター</figcaption></figure>
     </td>
   </tr>
+  <tr>
+    <td colspan="2">
+    <figure><img src="./img/top_pc.png">
+    <figcaption>▲PC版サイズ</figcaption></figure>
+    </td>
+  </tr>
 </table>
 
 ## 主な機能
@@ -205,14 +211,13 @@ QRコードの下、「オートコンプリートタグファイルを作成」
 ワークフローをSimpleComfyUIで使用するための設定ファイルです。<br>
 ワークフローの内容に合わせて変更する必要があります。
 
-#### 画像を出力するノードのID（通常はKSampler）
+#### 画像を出力するノードのID（通常はSaveImage）
 
-上記のワークフローでは `D2 KSampler` を使っているので、そのノードIDを記載します。
+画像保存ノードのIDを指定します。
 
-[NAIDGenerator](https://github.com/bedovyy/ComfyUI_NAIDGenerator) のように画像を表示しないノードの場合は `Save Image` など画像保存ノードを指定してください。
 
 ```yaml
-output_node_id: 14
+output_node_id: 9
 ```
 
 #### 必須の入力項目
