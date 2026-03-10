@@ -2,6 +2,13 @@ import { nextTick, type Ref } from 'vue'
 
 const WEIGHT_PATTERN = /^\((.+):([+-]?\d+(\.\d+)?)\)$/
 
+/**
+ * テキストの重み指定を増減して返す。
+ * 既に `(text:1.2)` 形式なら値を再計算し、1.0相当なら装飾を外す。
+ * @param text 変換対象テキスト。
+ * @param weightChange 加算する重み変化量。
+ * @returns 重み調整後のテキスト。
+ */
 function adjustWeightText(text: string, weightChange: number): string {
   const match = text.match(WEIGHT_PATTERN)
 
@@ -17,6 +24,11 @@ function adjustWeightText(text: string, weightChange: number): string {
   return Math.abs(newWeight - 1.0) < 0.0001 ? text : `(${text}:${newWeight.toFixed(1)})`
 }
 
+/**
+ * 文字列の前後空白を保持したまま、中央の本体部分を分離する。
+ * @param text 分割対象文字列。
+ * @returns 前方空白・本体・後方空白の3要素。
+ */
 function splitTrimEdges(text: string): { leading: string; core: string; trailing: string } {
   const leadingMatch = text.match(/^\s*/)
   const trailingMatch = text.match(/\s*$/)
@@ -29,6 +41,14 @@ function splitTrimEdges(text: string): { leading: string; core: string; trailing
   }
 }
 
+/**
+ * 選択範囲テキストの重みを調整し、更新後テキストと選択範囲を返す。
+ * @param text 全体テキスト。
+ * @param selectionStart 選択開始位置。
+ * @param selectionEnd 選択終了位置。
+ * @param weightChange 加算する重み変化量。
+ * @returns 更新後テキストと次の選択範囲。
+ */
 function updateSelectionWeight(
   text: string,
   selectionStart: number,
@@ -55,6 +75,12 @@ function updateSelectionWeight(
   }
 }
 
+/**
+ * 指定開き括弧に対応する閉じ括弧の位置を検索する。
+ * @param text 探索対象テキスト。
+ * @param openIndex 開き括弧のインデックス。
+ * @returns 閉じ括弧のインデックス。見つからない場合は-1。
+ */
 function findMatchingParen(text: string, openIndex: number): number {
   let depth = 0
 
@@ -72,6 +98,12 @@ function findMatchingParen(text: string, openIndex: number): number {
   return -1
 }
 
+/**
+ * カーソル位置を内包する重み付き表現 `(text:1.2)` の範囲を探す。
+ * @param text 探索対象テキスト。
+ * @param cursorPos カーソル位置。
+ * @returns 見つかった範囲。見つからない場合はnull。
+ */
 function findEnclosingWeightedRange(
   text: string,
   cursorPos: number
@@ -99,6 +131,13 @@ function findEnclosingWeightedRange(
   return null
 }
 
+/**
+ * カーソルが含まれる既存重み付き表現の重みを更新する。
+ * @param text 更新対象テキスト。
+ * @param cursorPos カーソル位置。
+ * @param weightChange 加算する重み変化量。
+ * @returns 更新後テキスト、文字数差分、処理可否。
+ */
 function updateEnclosingWeight(
   text: string,
   cursorPos: number,
@@ -123,6 +162,10 @@ function updateEnclosingWeight(
 /**
  * カーソル位置の単語に重みを付与または更新する。
  * `(word:1.2)` 形式の既存重みがあれば再計算し、1.0 に戻る場合は装飾を解除する。
+ * @param text 更新対象テキスト。
+ * @param cursorPos カーソル位置。
+ * @param weightChange 加算する重み変化量。
+ * @returns 更新後テキストとカーソル位置調整用の長さ差分。
  */
 function updateWordWeight(
   text: string,
@@ -159,10 +202,21 @@ function updateWordWeight(
   return { text: words.join(','), lengthDiff }
 }
 
+/**
+ * テキストエリア上の選択範囲またはカーソル位置単語に対して重み調整操作を提供する。
+ * @param modelValue テキストモデル。
+ * @param targetElement 操作対象のテキストエリア要素。
+ * @returns 重み操作関数。
+ */
 export function useWeightAdjust(
   modelValue: Ref<string>,
   targetElement: Ref<HTMLTextAreaElement | null>
 ) {
+  /**
+   * 現在選択範囲またはカーソル位置に対して重みを増減し、選択状態を維持する。
+   * @param weightChange 加算する重み変化量。
+   * @returns 調整完了時に解決されるPromise。
+   */
   async function setWeight(weightChange: number): Promise<void> {
     if (!targetElement.value) return
 

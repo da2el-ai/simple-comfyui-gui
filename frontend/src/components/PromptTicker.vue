@@ -1,8 +1,15 @@
 <script setup lang="ts">
-defineProps<{
+/**
+ * PromptTickerコンポーネントの入力プロパティ。
+ */
+type PromptTickerProps = {
+  /** 表示するメッセージ本文。 */
   message: string
+  /** ティッカーを表示するかどうか。 */
   visible: boolean
-}>()
+}
+
+defineProps<PromptTickerProps>()
 </script>
 
 <template>

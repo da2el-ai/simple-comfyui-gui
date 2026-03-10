@@ -28,6 +28,11 @@ const HISTORY_POLL_BASE_MS = 1000
 const HISTORY_POLL_MAX_MS = 10000
 const HISTORY_MONITOR_TIMEOUT_MS = 15 * 60 * 1000
 
+/**
+ * 画像生成の実行・キャンセル・完了監視とプレビュー管理を提供する。
+ * @param deps 生成処理が参照する依存状態。
+ * @returns 画像生成の状態と操作関数。
+ */
 export function useImageGeneration(deps: ImageGenerationDeps) {
   const isGenerating = ref(false)
   const generationMessage = ref('')
@@ -37,7 +42,11 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
   // 現在監視中の prompt_id リスト（キャンセル時に参照する）
   const activePromptIds = ref<string[]>([])
 
-  /** 画像生成を実行する */
+  /**
+   * 画像生成を実行し、投入した全プロンプトの完了を監視する。
+   * @param batchCountOverride 生成枚数の上書き値。
+   * @returns 生成処理完了時に解決されるPromise。
+   */
   async function generateImages(batchCountOverride?: number): Promise<void> {
     const { endpoint, workflowConfig, workflowData } = deps
 
@@ -81,7 +90,10 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     }
   }
 
-  /** 保留中キューを削除し生成をキャンセルする。実行中のジョブは完了を待機する。 */
+  /**
+   * 保留中キューを削除して生成をキャンセルする。実行中ジョブは完了待機に切り替える。
+   * @returns キャンセル処理完了時に解決されるPromise。
+   */
   async function cancelGeneration(): Promise<void> {
     if (!isGenerating.value || !deps.endpoint.value) return
 
@@ -110,6 +122,11 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
 
   // --- 内部: プロンプトワークフロー構築 ---
 
+  /**
+   * optional値を反映した送信用ワークフローを構築する。
+   * @param optionalValueMap optional項目IDと値のマップ。
+   * @returns 送信用に複製・更新されたワークフローデータ。
+   */
   function buildPromptWorkflow(optionalValueMap: Record<string, string | number>): WorkflowData {
     const { workflowData } = deps
     if (!workflowData.value) {
@@ -135,6 +152,11 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     return promptWorkflow
   }
 
+  /**
+   * UI上のoptional入力から送信用の値マップを生成する。
+   * seed型は毎回ランダム値に置き換え、空文字は除外する。
+   * @returns optional項目IDと値のマップ。
+   */
   async function buildOptionalValueMap(): Promise<Record<string, string | number>> {
     const valueMap: Record<string, string | number> = {}
 
@@ -153,10 +175,23 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     return valueMap
   }
 
+  /**
+   * ワークフローデータをディープコピーする。
+   * @param source コピー元ワークフロー。
+   * @returns 複製されたワークフロー。
+   */
   function cloneWorkflow(source: WorkflowData): WorkflowData {
     return JSON.parse(JSON.stringify(source)) as WorkflowData
   }
 
+  /**
+   * 設定定義に従って対象ノード入力へ値を設定する。
+   * @param workflow 更新対象ワークフロー。
+   * @param category requiredまたはoptional。
+   * @param itemId 設定項目ID。
+   * @param value 設定する値。
+   * @returns なし。
+   */
   function setNodeValueByConfig(
     workflow: WorkflowData,
     category: 'required' | 'optional',
@@ -184,6 +219,12 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     targetNode.inputs[configItem.workflow.input_name] = value
   }
 
+  /**
+   * 設定カテゴリと項目IDから対応する設定項目を取得する。
+   * @param category requiredまたはoptional。
+   * @param itemId 取得対象の項目ID。
+   * @returns 該当設定項目。見つからない場合はnull。
+   */
   function findConfigItem(
     category: 'required' | 'optional',
     itemId: string
@@ -195,6 +236,13 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     return targetItems.find((item) => item.id === itemId) ?? null
   }
 
+  /**
+   * 検索条件でワークフローノードを探索する。
+   * @param workflow 探索対象ワークフロー。
+   * @param searchType 探索種別。
+   * @param searchValue 探索値。
+   * @returns 見つかったノード。見つからない場合はnull。
+   */
   function findNode(
     workflow: WorkflowData,
     searchType: WorkflowSearchType,
@@ -216,6 +264,10 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
 
   // --- 内部: 生成完了監視 ---
 
+  /**
+   * 監視対象の全prompt_idについて順番に完了を待機し、画像プレビューを追加する。
+   * @returns 監視完了時に解決されるPromise。
+   */
   async function monitorPromptCompletion(): Promise<void> {
     // activePromptIds のスナップショットを取りつつ、順番に完了を待つ
     const idsToMonitor = [...activePromptIds.value]
@@ -250,6 +302,11 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     }
   }
 
+  /**
+   * 単一prompt_idの履歴をポーリングし、完了状態になるまで待機する。
+   * @param promptId 監視対象のprompt_id。
+   * @returns 完了ならtrue。キャンセルまたはタイムアウト時はfalse。
+   */
   async function waitForPromptCompletion(promptId: string): Promise<boolean> {
     const startedAt = Date.now()
     let nextInterval = HISTORY_POLL_BASE_MS
@@ -276,6 +333,12 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     return false
   }
 
+  /**
+   * 履歴データに出力ノード結果が存在するかを判定する。
+   * @param history ComfyUIの履歴データ。
+   * @param promptId 判定対象のprompt_id。
+   * @returns 出力が存在すればtrue。
+   */
   function isPromptCompleted(history: PromptHistory, promptId: string): boolean {
     const promptHistory = history[promptId]
     if (!promptHistory || typeof promptHistory !== 'object') {
@@ -290,6 +353,12 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     return Object.keys(outputs as Record<string, unknown>).length > 0
   }
 
+  /**
+   * 履歴データから出力画像URLを生成してプレビュー先頭へ追加する。
+   * @param history ComfyUIの履歴データ。
+   * @param promptId 対象prompt_id。
+   * @returns なし。
+   */
   function appendImagesFromHistory(history: PromptHistory, promptId: string): void {
     const promptHistory = history[promptId] as Record<string, unknown> | undefined
     if (!promptHistory) return
@@ -313,10 +382,19 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     }
   }
 
+  /**
+   * 生成プレビュー画像を全てクリアする。
+   * @returns なし。
+   */
   function clearPreview(): void {
     previewImages.value = []
   }
 
+  /**
+   * 指定ミリ秒だけ待機する。
+   * @param ms 待機時間（ミリ秒）。
+   * @returns 待機後に解決されるPromise。
+   */
   function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => {
       setTimeout(resolve, ms)

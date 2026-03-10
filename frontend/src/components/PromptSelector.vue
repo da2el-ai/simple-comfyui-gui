@@ -27,11 +27,19 @@ const emit = defineEmits<{
 const isOpen = ref(false)
 const isEditMode = ref(false)
 
+/**
+ * プロンプト選択ダイアログを開き、最新データを読み込む。
+ * @returns なし。
+ */
 function open() {
   isOpen.value = true
   void loadData()
 }
 
+/**
+ * ダイアログを閉じ、編集関連の状態を初期化する。
+ * @returns なし。
+ */
 function close() {
   isOpen.value = false
   isEditMode.value = false
@@ -39,6 +47,10 @@ function close() {
   deleteConfirm.value = null
 }
 
+/**
+ * 編集モードのON/OFFを切り替える。
+ * @returns なし。
+ */
 function toggleEditMode() {
   isEditMode.value = !isEditMode.value
   deleteConfirm.value = null
@@ -63,6 +75,10 @@ watch(categories, (cats) => {
   }
 })
 
+/**
+ * セレクタデータを取得し、現在カテゴリ選択を整合する。
+ * @returns 読み込み完了時に解決されるPromise。
+ */
 async function loadData() {
   loading.value = true
   errorMsg.value = ''
@@ -84,6 +100,11 @@ async function loadData() {
 
 // ─── プロンプト挿入 ──────────────────────────────────────────────────────────
 
+/**
+ * 指定プロンプトを対象テキストエリアのカーソル位置へ挿入する。
+ * @param prompt 挿入するプロンプト文字列。
+ * @returns なし。
+ */
 function insertPrompt(prompt: string) {
   if (!props.targetElement) return
 
@@ -120,18 +141,34 @@ const formSubcategories = computed(() => {
   return (selectorData.value[key] ?? []).map((s) => s.subcategory)
 })
 
+/**
+ * 追加フォームを開く。
+ * @returns なし。
+ */
 function openAddForm() {
   formMode.value = 'add'
   editTarget.value = null
   showForm.value = true
 }
 
+/**
+ * 編集フォームを開き、対象アイテムを設定する。
+ * @param category 対象カテゴリ名。
+ * @param subcategory 対象サブカテゴリ名。
+ * @param item 編集対象アイテム。
+ * @returns なし。
+ */
 function openEditForm(category: string, subcategory: string, item: SelectorItem) {
   formMode.value = 'edit'
   editTarget.value = { category, subcategory, item }
   showForm.value = true
 }
 
+/**
+ * 追加フォームの送信内容を保存し、一覧を再読込する。
+ * @param req 追加リクエスト。
+ * @returns 保存完了時に解決されるPromise。
+ */
 async function handleSubmitAdd(req: Parameters<typeof addSelectorItem>[0]) {
   await addSelectorItem(req)
   showForm.value = false
@@ -139,6 +176,11 @@ async function handleSubmitAdd(req: Parameters<typeof addSelectorItem>[0]) {
   showTicker('保存しました')
 }
 
+/**
+ * 編集フォームの送信内容を更新し、一覧を再読込する。
+ * @param req 編集リクエスト。
+ * @returns 更新完了時に解決されるPromise。
+ */
 async function handleSubmitEdit(req: { new_name?: string; new_prompt?: string }) {
   if (!editTarget.value) return
   await editSelectorItem(
@@ -162,6 +204,13 @@ const deleteConfirm = ref<{
   label: string
 } | null>(null)
 
+/**
+ * アイテム削除確認を表示する。
+ * @param category 対象カテゴリ名。
+ * @param subcategory 対象サブカテゴリ名。
+ * @param item 対象アイテム。
+ * @returns なし。
+ */
 function confirmDeleteItem(category: string, subcategory: string, item: SelectorItem) {
   deleteConfirm.value = {
     type: 'item',
@@ -172,6 +221,12 @@ function confirmDeleteItem(category: string, subcategory: string, item: Selector
   }
 }
 
+/**
+ * サブカテゴリ削除確認を表示する。
+ * @param category 対象カテゴリ名。
+ * @param subcategory 対象サブカテゴリ名。
+ * @returns なし。
+ */
 function confirmDeleteSubcategory(category: string, subcategory: string) {
   deleteConfirm.value = {
     type: 'subcategory',
@@ -181,6 +236,11 @@ function confirmDeleteSubcategory(category: string, subcategory: string) {
   }
 }
 
+/**
+ * カテゴリ削除確認を表示する。
+ * @param category 対象カテゴリ名。
+ * @returns なし。
+ */
 function confirmDeleteCategory(category: string) {
   deleteConfirm.value = {
     type: 'category',
@@ -189,6 +249,10 @@ function confirmDeleteCategory(category: string) {
   }
 }
 
+/**
+ * 確認済みの削除処理を実行し、一覧を再読込する。
+ * @returns 削除完了時に解決されるPromise。
+ */
 async function executeDelete() {
   if (!deleteConfirm.value) return
   const dc = deleteConfirm.value
@@ -209,6 +273,11 @@ const tickerMessage = ref('')
 const tickerVisible = ref(false)
 let tickerTimer: ReturnType<typeof setTimeout> | null = null
 
+/**
+ * 短時間表示の通知ティッカーを表示する。
+ * @param message 表示メッセージ。
+ * @returns なし。
+ */
 function showTicker(message: string) {
   tickerMessage.value = message
   tickerVisible.value = true

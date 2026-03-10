@@ -67,15 +67,28 @@ const {
 const showGallery = ref(false)
 const selectedImageIndex = ref(0)
 
+/**
+ * プレビュー画像ギャラリーを指定インデックスで開く。
+ * @param index 初期表示する画像インデックス。
+ * @returns なし。
+ */
 function openGallery(index: number): void {
   selectedImageIndex.value = index
   showGallery.value = true
 }
 
+/**
+ * プレビュー画像ギャラリーを閉じる。
+ * @returns なし。
+ */
 function closeGallery(): void {
   showGallery.value = false
 }
 
+/**
+ * Positive Prompt入力欄の拡張表示を切り替える。
+ * @returns なし。
+ */
 function togglePositiveExpand(): void {
   isPositiveExpanded.value = !isPositiveExpanded.value
 }
@@ -84,6 +97,11 @@ function togglePositiveExpand(): void {
 const { setWeight } = useWeightAdjust(positive, positiveTextareaRef)
 
 // --- キーボードショートカット ---
+/**
+ * 生成実行・重み調整・ギャラリー表示のショートカットを処理する。
+ * @param event keydownイベント。
+ * @returns なし。
+ */
 function handleKeyDown(event: KeyboardEvent): void {
   const isCtrl = event.ctrlKey || event.metaKey
   if (!isCtrl) return
@@ -144,6 +162,11 @@ onUnmounted(() => {
   document.removeEventListener('keydown', handleKeyDown)
 })
 
+/**
+ * ワークフロー選択変更を反映する。
+ * @param event select変更イベント。
+ * @returns なし。
+ */
 function handleWorkflowChange(event: Event): void {
   if (isGenerating.value) {
     return
@@ -152,10 +175,20 @@ function handleWorkflowChange(event: Event): void {
   void settings.changeWorkflow(nextWorkflow)
 }
 
+/**
+ * 1枚だけ画像生成を実行する。
+ * @returns なし。
+ */
 function generateOnce(): void {
   void generateImages(1)
 }
 
+/**
+ * 任意画像入力項目のファイル変更を処理し、必要に応じて画像をアップロードする。
+ * @param itemId 対象入力項目ID。
+ * @param imageFile 選択された画像ファイル。
+ * @returns 処理完了時に解決されるPromise。
+ */
 async function handleOptionalImageFileChange(itemId: string, imageFile: File | null): Promise<void> {
   imageFileMap.value = {
     ...imageFileMap.value,
@@ -198,6 +231,11 @@ async function handleOptionalImageFileChange(itemId: string, imageFile: File | n
   clearMaskState()
 }
 
+/**
+ * 指定画像入力項目のマスクエディタを開く。
+ * @param itemId 対象入力項目ID。
+ * @returns なし。
+ */
 function openMaskEditor(itemId: string): void {
   if (!imageFileMap.value[itemId]) {
     return
@@ -206,10 +244,19 @@ function openMaskEditor(itemId: string): void {
   isMaskEditorOpen.value = true
 }
 
+/**
+ * マスクエディタを閉じる。
+ * @returns なし。
+ */
 function closeMaskEditor(): void {
   isMaskEditorOpen.value = false
 }
 
+/**
+ * マスク保存イベントを処理し、関連画像をComfyUI形式でアップロードする。
+ * @param payload 保存されたマスクファイルとオーバーレイ情報。
+ * @returns 処理完了時に解決されるPromise。
+ */
 async function handleMaskSave(payload: { maskFile: File; overlayDataUrl: string }): Promise<void> {
   maskOverlayDataUrl.value = payload.overlayDataUrl
 
@@ -289,21 +336,44 @@ async function handleMaskSave(payload: { maskFile: File; overlayDataUrl: string 
   isMaskEditorOpen.value = false
 }
 
+/**
+ * マスク表示状態を初期化する。
+ * @returns なし。
+ */
 function clearMaskState(): void {
   maskOverlayDataUrl.value = ''
 }
 
+/**
+ * Fileオブジェクトの内容を保持したままファイル名を変更した新規Fileを作る。
+ * @param source 元ファイル。
+ * @param nextName 変更後ファイル名。
+ * @returns リネーム後のFileを返すPromise。
+ */
 async function renameFile(source: File, nextName: string): Promise<File> {
   const content = await source.arrayBuffer()
   return new File([content], nextName, { type: source.type || 'image/png' })
 }
 
+/**
+ * 元画像サイズの透明PNGファイルを生成する。
+ * @param sourceImageFile サイズ参照に使う元画像。
+ * @param fileName 生成ファイル名。
+ * @returns 透明画像Fileを返すPromise。
+ */
 function createTransparentImageFile(sourceImageFile: File, fileName: string): Promise<File> {
   return createCanvasFile(sourceImageFile, fileName, (ctx, width, height) => {
     ctx.clearRect(0, 0, width, height)
   })
 }
 
+/**
+ * 元画像サイズのキャンバスに描画してPNGファイルを生成する。
+ * @param sourceImageFile サイズ参照に使う元画像。
+ * @param fileName 生成ファイル名。
+ * @param painter キャンバス描画処理。
+ * @returns 生成したPNG Fileを返すPromise。
+ */
 async function createCanvasFile(
   sourceImageFile: File,
   fileName: string,
@@ -328,6 +398,11 @@ async function createCanvasFile(
   return new File([blob], fileName, { type: 'image/png' })
 }
 
+/**
+ * FileからHTMLImageElementを生成して読み込み完了を待機する。
+ * @param file 読み込む画像ファイル。
+ * @returns 読み込み済み画像要素を返すPromise。
+ */
 function loadImageFromFile(file: File): Promise<HTMLImageElement> {
   const objectUrl = URL.createObjectURL(file)
   return new Promise((resolve, reject) => {
@@ -344,6 +419,11 @@ function loadImageFromFile(file: File): Promise<HTMLImageElement> {
   })
 }
 
+/**
+ * キャンバス内容をPNG Blobへ変換する。
+ * @param canvas 変換対象キャンバス。
+ * @returns 生成したBlobを返すPromise。
+ */
 function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {

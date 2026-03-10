@@ -38,6 +38,10 @@ type MaskEditorSettings = {
   color: MaskColor
 }
 
+/**
+ * マスクエディタのブラシ設定をlocalStorageから復元する。
+ * @returns 復元設定。妥当でない場合はnull。
+ */
 function loadSettings(): MaskEditorSettings | null {
   const raw = localStorage.getItem(MASK_EDITOR_SETTINGS_KEY)
   if (!raw) return null
@@ -79,6 +83,11 @@ function loadSettings(): MaskEditorSettings | null {
   }
 }
 
+/**
+ * マスクエディタのブラシ設定をlocalStorageへ保存する。
+ * @param settings 保存する設定。
+ * @returns なし。
+ */
 function saveSettings(settings: MaskEditorSettings): void {
   localStorage.setItem(MASK_EDITOR_SETTINGS_KEY, JSON.stringify(settings))
 }
@@ -136,29 +145,57 @@ watch(
   }
 )
 
+/**
+ * ダイアログを閉じるイベントを親へ通知する。
+ * @returns なし。
+ */
 function closeDialog(): void {
   emit('close')
 }
 
+/**
+ * dialog要素の既定キャンセル動作を抑止して閉じる。
+ * @param event cancelイベント。
+ * @returns なし。
+ */
 function onDialogCancel(event: Event): void {
   event.preventDefault()
   closeDialog()
 }
 
+/**
+ * ブラシモードへ切り替え、ブラシサイズを設定する。
+ * @param size 設定するブラシサイズ。
+ * @returns なし。
+ */
 function setBrush(size: number): void {
   toolMode.value = 'brush'
   brushSize.value = size
 }
 
+/**
+ * 消しゴムモードへ切り替え、消しゴムサイズを設定する。
+ * @param size 設定する消しゴムサイズ。
+ * @returns なし。
+ */
 function setEraser(size: number): void {
   toolMode.value = 'eraser'
   eraserSize.value = size
 }
 
+/**
+ * マスク描画色を変更する。
+ * @param nextColor 設定する色。
+ * @returns なし。
+ */
 function setMaskColor(nextColor: MaskColor): void {
   color.value = nextColor
 }
 
+/**
+ * キャンバス上の描画内容を全てクリアする。
+ * @returns なし。
+ */
 function clearCanvas(): void {
   const canvas = canvasRef.value
   if (!canvas) return
@@ -167,6 +204,10 @@ function clearCanvas(): void {
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 }
 
+/**
+ * 画像サイズに合わせてキャンバスを初期化し、既存マスクがあれば再描画する。
+ * @returns 初期化完了時に解決されるPromise。
+ */
 async function initializeCanvas(): Promise<void> {
   const imageElement = imageRef.value
   const canvas = canvasRef.value
@@ -205,6 +246,11 @@ async function initializeCanvas(): Promise<void> {
   }
 }
 
+/**
+ * 描画開始位置を記録し、単一点描画を行って描画状態を開始する。
+ * @param event pointerdownイベント。
+ * @returns なし。
+ */
 function startDrawing(event: PointerEvent): void {
   const point = getCanvasPoint(event)
   if (!point) return
@@ -215,6 +261,11 @@ function startDrawing(event: PointerEvent): void {
   drawLine(point.x, point.y, point.x, point.y)
 }
 
+/**
+ * ポインタ移動に合わせて前回点から現在点まで線を描画する。
+ * @param event pointermoveイベント。
+ * @returns なし。
+ */
 function draw(event: PointerEvent): void {
   if (!isDrawing.value) return
   const point = getCanvasPoint(event)
@@ -225,10 +276,22 @@ function draw(event: PointerEvent): void {
   previousY = point.y
 }
 
+/**
+ * 描画状態を終了する。
+ * @returns なし。
+ */
 function stopDrawing(): void {
   isDrawing.value = false
 }
 
+/**
+ * 現在ツール設定に応じて指定区間へ線を描画する。
+ * @param fromX 開始X座標。
+ * @param fromY 開始Y座標。
+ * @param toX 終了X座標。
+ * @param toY 終了Y座標。
+ * @returns なし。
+ */
 function drawLine(fromX: number, fromY: number, toX: number, toY: number): void {
   const canvas = canvasRef.value
   if (!canvas) return
@@ -254,6 +317,11 @@ function drawLine(fromX: number, fromY: number, toX: number, toY: number): void 
   ctx.stroke()
 }
 
+/**
+ * pointerイベント座標をキャンバス内部座標へ変換する。
+ * @param event pointerイベント。
+ * @returns キャンバス座標。算出不能時はnull。
+ */
 function getCanvasPoint(event: PointerEvent): { x: number; y: number } | null {
   const canvas = canvasRef.value
   if (!canvas) return null
@@ -270,6 +338,10 @@ function getCanvasPoint(event: PointerEvent): { x: number; y: number } | null {
   }
 }
 
+/**
+ * オーバーレイ画像と2値マスク画像を生成して保存イベントを発火する。
+ * @returns 保存処理完了時に解決されるPromise。
+ */
 async function saveMask(): Promise<void> {
   const canvas = canvasRef.value
   if (!canvas) return
@@ -284,6 +356,11 @@ async function saveMask(): Promise<void> {
   })
 }
 
+/**
+ * 描画キャンバスをComfyUI向けの2値マスクPNG Blobへ変換する。
+ * @param sourceCanvas 変換元キャンバス。
+ * @returns 変換後のPNG Blobを返すPromise。
+ */
 function createBinaryMaskBlob(sourceCanvas: HTMLCanvasElement): Promise<Blob> {
   const binaryCanvas = document.createElement('canvas')
   binaryCanvas.width = sourceCanvas.width

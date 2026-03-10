@@ -78,6 +78,10 @@ const canSave = computed(() => name.value.trim() !== '' && prompt.value.trim() !
 
 // ─── 送信 ───────────────────────────────────────────────────────────────────
 
+/**
+ * フォーム入力内容を検証し、モードに応じて追加または編集イベントを発火する。
+ * @returns なし。
+ */
 function handleSubmit() {
   if (props.mode === 'add') {
     const category = isNewCategory.value

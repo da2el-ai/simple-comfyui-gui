@@ -20,7 +20,11 @@ const DEFAULT_SETTINGS: PersistedSettings = {
   optionalValues: {}
 }
 
-/** localStorage から設定を読み込む。未保存・パース失敗時はデフォルト値を返す */
+/**
+ * localStorageから永続化設定を読み込む。
+ * 未保存またはパース失敗時はデフォルト設定を返す。
+ * @returns 読み込まれた設定オブジェクト。
+ */
 export function loadSettings(): PersistedSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -36,7 +40,11 @@ export function loadSettings(): PersistedSettings {
   }
 }
 
-/** 現在の保存済み設定に部分マージして localStorage へ書き込む */
+/**
+ * 現在の保存済み設定に部分マージしてlocalStorageへ書き込む。
+ * @param partial 上書き保存する設定の一部。
+ * @returns なし。
+ */
 export function saveSettings(partial: Partial<PersistedSettings>): void {
   try {
     const current = loadSettings()
@@ -46,7 +54,12 @@ export function saveSettings(partial: Partial<PersistedSettings>): void {
   }
 }
 
-/** 指定ワークフローの optional 値を保存済みマップへ上書き保存する */
+/**
+ * 指定ワークフローのoptional値を保存済みマップへ上書き保存する。
+ * @param workflowName 保存対象のワークフロー名。
+ * @param values 保存するoptional値マップ。
+ * @returns なし。
+ */
 export function saveOptionalValues(
   workflowName: string,
   values: Record<string, string | number>

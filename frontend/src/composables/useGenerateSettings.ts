@@ -18,6 +18,10 @@ import { useAsyncState } from './useAsyncState'
 import { loadSettings } from './useLocalSettings'
 import type { PersistedSettings } from './useLocalSettings'
 
+/**
+ * 画像生成画面で利用する設定状態と操作関数を提供する。
+ * @returns 生成設定の状態と各種操作関数。
+ */
 export function useGenerateSettings() {
   const { loading, errorMessage, run } = useAsyncState()
   const endpoint = ref('')
@@ -31,7 +35,12 @@ export function useGenerateSettings() {
   const currentWorkflow = ref('')
   const optionalItems = ref<TDynamicInputItem[]>([])
 
-  /** 初期化: エンドポイント・object_info・ワークフロー一覧を取得する */
+  /**
+   * 初期化処理を行い、エンドポイント・object_info・チェックポイント・
+   * ワークフロー情報を取得して初期状態を構築する。
+   * @param saved ローカル保存済みの設定。
+   * @returns 初期化完了時に解決されるPromise。
+   */
   async function initialize(saved?: PersistedSettings): Promise<void> {
     await run(async () => {
       endpoint.value = await fetchComfyUIEndpoint()
@@ -60,7 +69,11 @@ export function useGenerateSettings() {
     }, '初期化に失敗しました')
   }
 
-  /** ワークフロー切り替え */
+  /**
+   * 現在のワークフローを切り替え、関連する設定とワークフローJSONを再読込する。
+   * @param nextWorkflow 切り替え先のワークフロー名。
+   * @returns 切り替え完了時に解決されるPromise。
+   */
   async function changeWorkflow(nextWorkflow: string): Promise<void> {
     await run(async () => {
       currentWorkflow.value = nextWorkflow
@@ -68,7 +81,12 @@ export function useGenerateSettings() {
     }, 'ワークフロー切り替えに失敗しました')
   }
 
-  /** ワークフロー設定と JSON を読み込む */
+  /**
+   * 指定ワークフローの設定YAMLとJSONを読み込み、任意入力項目を構築する。
+   * 保存済み任意設定があれば、適用可能な値のみ復元する。
+   * @param workflowName 読み込むワークフロー名。
+   * @returns 読み込み完了時に解決されるPromise。
+   */
   async function loadWorkflowResources(workflowName: string): Promise<void> {
     const [configText, workflowJson] = await Promise.all([
       fetchWorkflowConfigText(workflowName),
@@ -105,7 +123,12 @@ export function useGenerateSettings() {
     optionalItems.value = items
   }
 
-  /** 任意設定の値を変更する */
+  /**
+   * 任意入力項目の値を更新する。
+   * @param itemId 更新対象の項目ID。
+   * @param value 設定する値。
+   * @returns なし。
+   */
   function handleOptionalValueChange(itemId: string, value: string | number): void {
     const target = optionalItems.value.find((item) => item.id === itemId)
     if (!target) {
@@ -116,6 +139,12 @@ export function useGenerateSettings() {
 
   // --- 内部ヘルパー ---
 
+  /**
+   * optional設定定義から動的入力項目の配列を生成する。
+   * @param configOptional ワークフローのoptional定義配列。
+   * @param info ComfyUIのobject_info。
+   * @returns 画面表示用の動的入力項目配列。
+   */
   function buildOptionalItems(
     configOptional: WorkflowConfigOptionalItem[],
     info: ComfyObjectInfo | null
@@ -134,6 +163,12 @@ export function useGenerateSettings() {
     })
   }
 
+  /**
+   * list型入力項目の候補値をobject_infoから解決する。
+   * @param item 候補値を解決するoptional項目。
+   * @param info ComfyUIのobject_info。
+   * @returns 候補値文字列の配列。
+   */
   function resolveListOptions(
     item: WorkflowConfigOptionalItem,
     info: ComfyObjectInfo | null
@@ -150,6 +185,12 @@ export function useGenerateSettings() {
     return resolved.map((entry) => String(entry))
   }
 
+  /**
+   * 入力項目の型と設定に応じて初期値を決定する。
+   * @param item 初期値を決めるoptional項目。
+   * @param options list型の場合の候補値配列。
+   * @returns 初期値として設定する文字列または数値。
+   */
   function resolveInitialValue(
     item: WorkflowConfigOptionalItem,
     options: string[]
@@ -176,6 +217,11 @@ export function useGenerateSettings() {
     return typeof item.input.default === 'string' ? item.input.default : ''
   }
 
+  /**
+   * object_infoからチェックポイント名一覧を抽出する。
+   * @param info ComfyUIのobject_info。
+   * @returns チェックポイント名の配列。
+   */
   function extractCheckpointList(info: ComfyObjectInfo | null): string[] {
     const value = getNestedValue(info, [
       'D2 Checkpoint Loader',
@@ -190,6 +236,12 @@ export function useGenerateSettings() {
     return value.map((entry) => String(entry))
   }
 
+  /**
+   * オブジェクトからパス配列を辿ってネスト値を取得する。
+   * @param source 参照元オブジェクト。
+   * @param path キーまたはインデックスの配列。
+   * @returns 該当値。辿れない場合はundefined。
+   */
   function getNestedValue(source: unknown, path: Array<string | number>): unknown {
     let current: unknown = source
     for (const segment of path) {
@@ -201,6 +253,11 @@ export function useGenerateSettings() {
     return current
   }
 
+  /**
+   * YAML読み込み結果がWorkflowConfig形式かどうかを判定する。
+   * @param value 検証対象の値。
+   * @returns requiredとoptionalを持つ配列構造ならtrue。
+   */
   function isWorkflowConfig(value: unknown): value is WorkflowConfig {
     if (value == null || typeof value !== 'object') {
       return false
