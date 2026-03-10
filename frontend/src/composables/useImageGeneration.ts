@@ -38,7 +38,7 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
   const activePromptIds = ref<string[]>([])
 
   /** 画像生成を実行する */
-  async function generateImages(): Promise<void> {
+  async function generateImages(batchCountOverride?: number): Promise<void> {
     const { endpoint, workflowConfig, workflowData } = deps
 
     if (!workflowConfig.value || !workflowData.value || !endpoint.value || isGenerating.value) {
@@ -52,8 +52,12 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
 
     try {
       const promptIds: string[] = []
+      const effectiveBatchCount =
+        typeof batchCountOverride === 'number'
+          ? Math.max(1, Math.floor(batchCountOverride))
+          : Math.max(1, Math.floor(deps.batchCount.value))
 
-      for (let index = 0; index < deps.batchCount.value; index += 1) {
+      for (let index = 0; index < effectiveBatchCount; index += 1) {
         const resolvedOptionalValueMap = await buildOptionalValueMap()
         const promptWorkflow = buildPromptWorkflow(resolvedOptionalValueMap)
         const response = await submitPrompt(endpoint.value, promptWorkflow)
