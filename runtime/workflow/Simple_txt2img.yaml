@@ -1,5 +1,5 @@
-# 画像を出力するノード（通常はKSampler）
-output_node_id: 3
+# 画像を出力するノード（通常は SaveImage）
+output_node_id: 9
 
 # 絶対に必要な設定
 required:
