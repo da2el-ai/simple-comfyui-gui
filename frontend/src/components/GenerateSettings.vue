@@ -119,6 +119,10 @@ const visibleOptionalItems = computed(() =>
   optionalItems.value.filter((item) => item.type !== 'seed')
 )
 
+const showCheckpointSetting = computed(() =>
+  workflowConfig.value?.required?.some((item) => item.id === 'checkpoint') ?? false
+)
+
 onMounted(async () => {
   // 保存済み設定を読み込んで UI 状態に反映する
   const saved = loadSettings()
@@ -484,7 +488,7 @@ function startAutoSave(): void {
           </div>
         </div>
 
-        <div class="w-full">
+        <div v-if="showCheckpointSetting" class="w-full">
           <label class="block text-sm font-medium mb-1">Checkpoint</label>
           <CheckpointSelector v-model="currentCheckpoint" :checkpoint-list="checkpointList" />
         </div>
