@@ -385,7 +385,21 @@ function startAutoSave(): void {
 
 <template>
   <section id="generate-settings">
-    <p v-if="currentWorkflow" class="text-sm text-gray-400 -mt-3 mb-4">Workflow: {{ currentWorkflow }}</p>
+    <div class="w-full mb-4">
+      <label class="block text-sm font-medium mb-1">Workflow</label>
+      <select
+        v-model="currentWorkflow"
+        class="w-full p-2 border rounded-md"
+        @change="handleWorkflowChange"
+      >
+        <option v-for="wf in workflowList" :key="wf" :value="wf">{{ wf }}</option>
+      </select>
+    </div>
+
+    <p v-if="loading" class="w-full text-sm text-gray-500">設定を読み込み中です...</p>
+    <p v-if="errorMessage" class="w-full text-sm text-red-600">{{ errorMessage }}</p>
+
+    <!-- <p v-if="currentWorkflow" class="text-sm text-gray-400 -mt-3 mb-4">Workflow: {{ currentWorkflow }}</p> -->
     <div class="mb-4">
       <div class="prompt-label-row">
         <label class="block text-sm font-medium mb-1">Positive Prompt</label>
@@ -515,19 +529,6 @@ function startAutoSave(): void {
           @save="handleMaskSave"
         />
 
-        <div class="w-full">
-          <label class="block text-sm font-medium mb-1">Workflow</label>
-          <select
-            v-model="currentWorkflow"
-            class="w-full p-2 border rounded-md"
-            @change="handleWorkflowChange"
-          >
-            <option v-for="wf in workflowList" :key="wf" :value="wf">{{ wf }}</option>
-          </select>
-        </div>
-
-        <p v-if="loading" class="w-full text-sm text-gray-500">設定を読み込み中です...</p>
-        <p v-if="errorMessage" class="w-full text-sm text-red-600">{{ errorMessage }}</p>
       </div>
     </details>
   </section>
