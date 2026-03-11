@@ -5,6 +5,8 @@ import type {
   PromptHistory,
   TDynamicInputItem,
   WorkflowConfig,
+  WorkflowDeleteTarget,
+  WorkflowInputBinding,
   WorkflowConfigOptionalItem,
   WorkflowConfigRequiredItem,
   WorkflowData,
@@ -69,6 +71,7 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
       for (let index = 0; index < effectiveBatchCount; index += 1) {
         const resolvedOptionalValueMap = await buildOptionalValueMap()
         const promptWorkflow = buildPromptWorkflow(resolvedOptionalValueMap)
+        // console.log("promptWorkflow", promptWorkflow)
         const response = await submitPrompt(endpoint.value, promptWorkflow)
         promptIds.push(response.prompt_id)
         queueCount.value = promptIds.length
@@ -149,6 +152,8 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
       setNodeValueByConfig(promptWorkflow, 'optional', itemId, itemValue)
     }
 
+    applySwitchTargets(promptWorkflow)
+
     return promptWorkflow
   }
 
@@ -163,6 +168,14 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     for (const item of deps.optionalItems.value) {
       if (item.type === 'seed') {
         valueMap[item.id] = Math.floor(Math.random() * 1_000_000_000)
+        continue
+      }
+
+      if (item.type === 'switch') {
+        continue
+      }
+
+      if (typeof item.value === 'boolean') {
         continue
       }
 
@@ -203,7 +216,7 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     }
 
     const configItem = findConfigItem(category, itemId)
-    if (!configItem) {
+    if (!configItem || !hasWorkflowBinding(configItem)) {
       return
     }
 
@@ -217,6 +230,83 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     }
 
     targetNode.inputs[configItem.workflow.input_name] = value
+  }
+
+  /**
+   * switch型入力の値に応じて、無効化対象ノードや経路をワークフローから削除する。
+   * @param workflow 更新対象ワークフロー。
+   * @returns なし。
+   */
+  function applySwitchTargets(workflow: WorkflowData): void {
+    const optionals = deps.workflowConfig.value?.optional ?? []
+
+    for (const item of deps.optionalItems.value) {
+      if (item.type !== 'switch' || item.value !== false) {
+        continue
+      }
+
+      const config = optionals.find((optional) => optional.id === item.id)
+      const targets = config?.workflow?.targets
+      if (!Array.isArray(targets)) {
+        continue
+      }
+
+      for (const target of targets) {
+        removeWorkflowTarget(workflow, target)
+      }
+    }
+  }
+
+  /**
+   * 指定ターゲット定義に従ってノードまたは経路を削除する。
+   * @param workflow 更新対象ワークフロー。
+   * @param target 削除対象定義。
+   * @returns なし。
+   */
+  function removeWorkflowTarget(workflow: WorkflowData, target: WorkflowDeleteTarget): void {
+    if (typeof target === 'string') {
+      delete workflow[target]
+      return
+    }
+
+    if (!Array.isArray(target) || target.length === 0) {
+      return
+    }
+
+    removeByPath(workflow as unknown, target)
+  }
+
+  /**
+   * パス定義で指定された値をオブジェクトから削除する。
+   * @param source 削除対象オブジェクト。
+   * @param path キーまたはインデックスの配列。
+   * @returns なし。
+   */
+  function removeByPath(source: unknown, path: Array<string | number>): void {
+    let current: unknown = source
+
+    for (let index = 0; index < path.length - 1; index += 1) {
+      if (current == null || typeof current !== 'object') {
+        return
+      }
+      current = (current as Record<string, unknown>)[String(path[index])]
+    }
+
+    if (current == null || typeof current !== 'object') {
+      return
+    }
+
+    const leaf = path[path.length - 1]
+
+    if (Array.isArray(current)) {
+      const numericIndex = Number(leaf)
+      if (Number.isInteger(numericIndex) && numericIndex >= 0 && numericIndex < current.length) {
+        current.splice(numericIndex, 1)
+      }
+      return
+    }
+
+    delete (current as Record<string, unknown>)[String(leaf)]
   }
 
   /**
@@ -234,6 +324,25 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
       return null
     }
     return targetItems.find((item) => item.id === itemId) ?? null
+  }
+
+  /**
+   * 設定項目が入力反映用のworkflowバインディングを持つか判定する。
+   * @param item 判定対象の設定項目。
+   * @returns search_type/search_value/input_name を持つ場合true。
+   */
+  function hasWorkflowBinding(
+    item: WorkflowConfigRequiredItem | WorkflowConfigOptionalItem
+  ): item is (WorkflowConfigRequiredItem | WorkflowConfigOptionalItem) & {
+    workflow: WorkflowInputBinding
+  } {
+    const workflow = item.workflow as Partial<WorkflowInputBinding> | undefined
+    return Boolean(
+      workflow &&
+        workflow.search_type != null &&
+        workflow.search_value != null &&
+        workflow.input_name != null
+    )
   }
 
   /**

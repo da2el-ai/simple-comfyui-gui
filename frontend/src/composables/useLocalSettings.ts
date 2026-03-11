@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'comfyui-settings'
+import type { DynamicInputValue } from '../types/api'
 
 /** localStorage に永続化する設定の型 */
 export type PersistedSettings = {
@@ -8,7 +9,7 @@ export type PersistedSettings = {
   currentCheckpoint: string
   currentWorkflow: string
   /** ワークフロー名 → { itemId → 値 } のマップ */
-  optionalValues: Record<string, Record<string, string | number>>
+  optionalValues: Record<string, Record<string, DynamicInputValue>>
 }
 
 const DEFAULT_SETTINGS: PersistedSettings = {
@@ -62,7 +63,7 @@ export function saveSettings(partial: Partial<PersistedSettings>): void {
  */
 export function saveOptionalValues(
   workflowName: string,
-  values: Record<string, string | number>
+  values: Record<string, DynamicInputValue>
 ): void {
   const current = loadSettings()
   saveSettings({

@@ -6,33 +6,53 @@ export type ComfyUIEndpointResponse = {
   endpoint: string
 }
 
-export type DynamicInputType = 'list' | 'text' | 'number' | 'textarea' | 'image' | 'seed'
+export type DynamicInputType =
+  | 'list'
+  | 'text'
+  | 'number'
+  | 'textarea'
+  | 'image'
+  | 'seed'
+  | 'switch'
+
+export type DynamicInputValue = string | number | boolean
 
 export type TDynamicInputItem = {
   id: string
   title: string
   type: DynamicInputType
   options: string[]
-  value: string | number
+  value: DynamicInputValue
 }
 
 export type WorkflowSearchType = 'class_type' | 'id' | 'title'
 
-export type WorkflowConfigRequiredItem = {
-  id: string
-  workflow: {
-    search_type: WorkflowSearchType
-    search_value: string | number
-    input_name: string
-  }
+export type WorkflowDeleteTarget = string | Array<string | number>
+
+export type WorkflowInputBinding = {
+  search_type: WorkflowSearchType
+  search_value: string | number
+  input_name: string
 }
 
-export type WorkflowConfigOptionalItem = WorkflowConfigRequiredItem & {
+export type WorkflowConfigRequiredItem = {
+  id: string
+  workflow: WorkflowInputBinding
+}
+
+export type WorkflowConfigOptionalItem = {
+  id: string
   input: {
     title: string
     type: DynamicInputType
     value?: Array<string | number>
-    default?: string | number
+    default?: DynamicInputValue
+  }
+  workflow?: Partial<WorkflowInputBinding> & {
+    targets?: WorkflowDeleteTarget[]
+  }
+  ui?: {
+    targets?: string[]
   }
 }
 

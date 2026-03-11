@@ -1,4 +1,15 @@
 :root {
+  
+  --color_blue: #2563eb;
+  --color_blue-light: #3b82f6;
+  --color_aqua: #00b6ff;
+  --color_red: #dc2626;
+  --color_red-light: #ef4444;
+  --color_gray-dark: #4b5563;
+  --color_gray: #6b7280;
+  --color_gray-light: #9ca3af;
+  --color_white-dark: #d1d5db;
+
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   line-height: 1.5;
 }
@@ -62,7 +73,7 @@ img{
 
 .card {
   background: #fff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color_white-dark);
   border-radius: 10px;
   padding: 16px;
 }
@@ -140,7 +151,7 @@ img{
 }
 
 .border {
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color_white-dark);
 }
 
 .rounded-md {
@@ -159,6 +170,40 @@ textarea,
 input,
 select {
   font: inherit;
+}
+
+input[type="checkbox"].toggle{
+  position: relative;
+  display: inline-block;
+  width: 3rem;
+  height: 1.5rem;
+  appearance: none;
+}
+input[type="checkbox"].toggle:before{
+  display: block;
+  position: absolute;
+  inset: 0;
+  background-color: var(--color_gray);
+  border-radius: 1rem;
+  content: "";
+}
+input[type="checkbox"].toggle:checked:before{
+  background-color: var(--color_blue);
+}
+input[type="checkbox"].toggle:after{
+  display: block;
+  position: absolute;
+  left: .25rem;
+  top: .25rem;
+  width: 1.5rem;
+  height: 1rem;
+  border-radius: 1rem;
+  background-color: #fff;
+  content: "";
+}
+input[type="checkbox"].toggle:checked:after{
+  left: auto;
+  right: .25rem;
 }
 
 .c-loading {
@@ -181,8 +226,9 @@ select {
   }
 }
 
+
 button {
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color_white-dark);
   background: #fff;
   border-radius: 8px;
   padding: 8px 12px;
@@ -198,8 +244,9 @@ button:disabled {
 .btn.active {
   background: #e9e9e9;
 }
+
 .btn.active-shadow {
-  box-shadow: 0 0 0 2px #00b6ff;
+  box-shadow: 0 0 0 2px var(--color_aqua);
 }
 
 .btn-small{
@@ -208,19 +255,19 @@ button:disabled {
 }
 
 .btn-primary {
-  background: #2563eb;
+  background: var(--color_blue);
   border: none;
   color: #fff;
 }
 
 .btn-danger {
-  background: #dc2626;
+  background: var(--color_red);
   border: none;
   color: #fff;
 }
 
 .btn-muted {
-  background: #6b7280;
+  background: var(--color_gray);
   border: none;
   color: #fff;
 }
@@ -230,25 +277,28 @@ button:disabled {
   border: none;
   font-size: 1.25rem;
   line-height: 1;
-  color: #9ca3af;
+  color: var(--color_gray-light);
   cursor: pointer;
   padding: 0 2px;
 }
 
+
+
+
 .btn-close:hover {
-  color: #ef4444;
+  color: var(--color_red-light);
 }
 
 .bg-blue-500 {
-  background: #3b82f6;
+  background: var(--color_blue-light);
 }
 
 .bg-red-500 {
-  background: #ef4444;
+  background: var(--color_red-light);
 }
 
 .bg-gray-500 {
-  background: #6b7280;
+  background: var(--color_gray);
 }
 
 .text-white {
@@ -256,19 +306,19 @@ button:disabled {
 }
 
 .hover\:bg-blue-600:hover {
-  background: #2563eb;
+  background: var(--color_blue);
 }
 
 .hover\:bg-red-600:hover {
-  background: #dc2626;
+  background: var(--color_red);
 }
 
 .hover\:bg-gray-600:hover {
-  background: #4b5563;
+  background: var(--color_gray-dark);
 }
 
 .disabled\:bg-gray-400:disabled {
-  background: #9ca3af;
+  background: var(--color_gray-light);
 }
 
 .autocomplete-placeholder {
@@ -277,7 +327,7 @@ button:disabled {
 
 .placeholder-text {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--color_gray);
 }
 
 .inset-0{

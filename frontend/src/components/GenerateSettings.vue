@@ -129,14 +129,52 @@ function handleKeyDown(event: KeyboardEvent): void {
 }
 
 // どちらかのエラーメッセージを表示する
+/**
+ * 設定読み込み系と生成系のエラーメッセージを統合して返す。
+ */
 const errorMessage = computed(
   () => settings.errorMessage.value || generation.errorMessage.value
 )
 
+/**
+ * switch型オプションの状態に基づいて非表示対象のoptional項目IDを算出する。
+ */
+const hiddenOptionalItemIds = computed(() => {
+  const hiddenIds = new Set<string>()
+  const configOptional = workflowConfig.value?.optional ?? []
+
+  for (const item of optionalItems.value) {
+    if (item.type !== 'switch' || item.value !== false) {
+      continue
+    }
+
+    const configItem = configOptional.find((optional) => optional.id === item.id)
+    const targets = configItem?.ui?.targets
+    if (!Array.isArray(targets)) {
+      continue
+    }
+
+    for (const targetId of targets) {
+      hiddenIds.add(targetId)
+    }
+  }
+
+  return hiddenIds
+})
+
+/**
+ * 画面に表示するoptional項目を返す。
+ * seed型とswitch指定で非表示になった項目は除外する。
+ */
 const visibleOptionalItems = computed(() =>
-  optionalItems.value.filter((item) => item.type !== 'seed')
+  optionalItems.value.filter(
+    (item) => item.type !== 'seed' && !hiddenOptionalItemIds.value.has(item.id)
+  )
 )
 
+/**
+ * 現在のワークフローでCheckpoint設定を表示すべきか判定する。
+ */
 const showCheckpointSetting = computed(() =>
   workflowConfig.value?.required?.some((item) => item.id === 'checkpoint') ?? false
 )

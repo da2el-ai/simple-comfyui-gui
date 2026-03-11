@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import yaml from 'js-yaml'
 import type {
   ComfyObjectInfo,
+  DynamicInputValue,
   TDynamicInputItem,
   WorkflowConfig,
   WorkflowConfigOptionalItem,
@@ -114,6 +115,10 @@ export function useGenerateSettings() {
         if (saved === undefined) continue
         if (item.type === 'list') {
           if (item.options.includes(String(saved))) item.value = String(saved)
+        } else if (item.type === 'number') {
+          if (typeof saved === 'number') item.value = saved
+        } else if (item.type === 'switch') {
+          if (typeof saved === 'boolean') item.value = saved
         } else {
           item.value = saved
         }
@@ -129,7 +134,7 @@ export function useGenerateSettings() {
    * @param value 設定する値。
    * @returns なし。
    */
-  function handleOptionalValueChange(itemId: string, value: string | number): void {
+  function handleOptionalValueChange(itemId: string, value: DynamicInputValue): void {
     const target = optionalItems.value.find((item) => item.id === itemId)
     if (!target) {
       return
@@ -194,7 +199,7 @@ export function useGenerateSettings() {
   function resolveInitialValue(
     item: WorkflowConfigOptionalItem,
     options: string[]
-  ): string | number {
+  ): DynamicInputValue {
     if (item.input.type === 'image') {
       return ''
     }
@@ -212,6 +217,10 @@ export function useGenerateSettings() {
 
     if (item.input.type === 'number') {
       return typeof item.input.default === 'number' ? item.input.default : 0
+    }
+
+    if (item.input.type === 'switch') {
+      return typeof item.input.default === 'boolean' ? item.input.default : true
     }
 
     return typeof item.input.default === 'string' ? item.input.default : ''

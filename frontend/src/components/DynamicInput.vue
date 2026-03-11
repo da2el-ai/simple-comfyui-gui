@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import DynamicInputImage from './DynamicInputImage.vue'
-
-type InputType = 'list' | 'text' | 'number' | 'textarea' | 'image' | 'seed'
+import type { DynamicInputType, DynamicInputValue } from '../types/api'
 
 interface Props {
-  type: InputType
+  type: DynamicInputType
   title: string
-  value: string | number
+  value: DynamicInputValue
   options?: string[]
   imageFile?: File | null
   imageMaskOverlay?: string
@@ -14,7 +13,7 @@ interface Props {
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
-  (event: 'update:value', value: string | number): void
+  (event: 'update:value', value: DynamicInputValue): void
   (event: 'update:image-file', value: File | null): void
   (event: 'open-mask-editor'): void
 }>()
@@ -26,7 +25,7 @@ const emit = defineEmits<{
 
     <select
       v-if="props.type === 'list' && props.options"
-      :value="props.value"
+      :value="String(props.value)"
       @input="emit('update:value', ($event.target as HTMLSelectElement).value)"
       class="w-full p-2 border rounded-md"
     >
@@ -36,7 +35,7 @@ const emit = defineEmits<{
     <input
       v-if="props.type === 'text'"
       type="text"
-      :value="props.value"
+      :value="String(props.value)"
       @input="emit('update:value', ($event.target as HTMLInputElement).value)"
       class="w-full p-2 border rounded-md"
     />
@@ -44,23 +43,33 @@ const emit = defineEmits<{
     <input
       v-if="props.type === 'number'"
       type="number"
-      :value="props.value"
+      :value="Number(props.value)"
       @input="emit('update:value', Number(($event.target as HTMLInputElement).value))"
       class="w-full p-2 border rounded-md"
     />
 
     <textarea
       v-if="props.type === 'textarea'"
-      :value="props.value"
+      :value="String(props.value)"
       @input="emit('update:value', ($event.target as HTMLTextAreaElement).value)"
       class="w-full p-2 border rounded-md resize-vertical"
       rows="3"
     />
 
+    <label v-if="props.type === 'switch'" class="row cursor-pointer">
+      <input
+        type="checkbox"
+        class="toggle"
+        :checked="Boolean(props.value)"
+        @change="emit('update:value', ($event.target as HTMLInputElement).checked)"
+      />
+      <!-- <span class="text-sm">有効</span> -->
+    </label>
+
     <DynamicInputImage
       v-if="props.type === 'image'"
       :file="props.imageFile ?? null"
-      :hidden-value="props.value"
+      :hidden-value="typeof props.value === 'boolean' ? '' : props.value"
       :overlay-data-url="props.imageMaskOverlay ?? ''"
       :preview-clickable="true"
       accept="image/*"
