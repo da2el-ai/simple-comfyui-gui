@@ -273,6 +273,12 @@ Positiveプロンプトはワークフローでは下記のようになってい
   },
 ```
 
+##### Checkpointについて
+
+不要な場合もあるので `id:checkpoint` は無しでもOKにしました。`required` なのに……。
+
+
+
 #### 必須の入力項目（required）のパラメーター
 
 - `id`: 名前は固定なので変更禁止
@@ -318,24 +324,39 @@ optional:
 #### 追加の入力項目（optional）のパラメーター
 
 - `id`: 他とバッティングしない一意の名前
-- `title`: 表示名
-- `type`: 入力項目のタイプ
-  - `text`: 文字列
-  - `textarea`: 複数行テキスト
-  - `number`: 数値
-  - `list`: リスト
-  - `image`: 画像読み込み
-  - `seed`: 乱数
-- `default`: 初期状態で表示する内容
-- `value`: 初期状態で表示する内容。リストなど変更不可なもので使う
-  -  カスタムノードから値を取得するにはワークフローを辿る配列を指定する。 
-  -  `["D2 Size Selector", "input", "required", preset, 0]`
-- `search_type`: 該当ノードの検索対象
-  - `class_type`
-  - `title`
-  - `id`
-- `search_value`: 該当ノードの検索ワード
-- `input_name`: 入力名
+- `input`: 画面に表示する項目の設定
+  - `title`: 表示名
+  - `type`: 入力項目のタイプ
+    - `text`: 文字列
+    - `textarea`: 複数行テキスト
+    - `number`: 数値
+    - `list`: リスト
+    - `image`: 画像読み込み
+    - `seed`: 乱数
+    - `switch`: 指定したノードと入力項目の有効・無効を切り替える
+  - `default`: 初期状態で表示する内容
+  - `value`: 初期状態で表示する内容。リストなど変更不可なもので使う
+    -  カスタムノードから値を取得するにはワークフローを辿る配列を指定
+    -  `["D2 Size Selector", "input", "required", preset, 0]`
+- `workflow`: ワークフローに関する設定
+  - `search_type`: 該当ノードの検索対象
+    - `class_type`
+    - `title`
+    - `id`
+  - `search_value`: 該当ノードの検索ワード
+  - `input_name`: 入力名
+- `switch`: `type:switch` で使用する項目 
+  - `workflow`
+    - `targets`
+      - ワークフローで有効・無効を切り替える対象をリスト形式で指定
+      - IDまたは、ワークフローの先頭からの探索経路
+      - 例：`54`
+      - 例：`["53", "inputs", "any_01"]`
+  - `ui`
+    - `targets`
+      - 生成画面で表示・表示を切り替える対象をリスト形式で指定
+      - `optional` 項目の `id` を指定
+      - 例：`"width"`
 
 
 ## ライセンス
