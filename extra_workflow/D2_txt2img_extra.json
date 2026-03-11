@@ -1,0 +1,243 @@
+{
+  "10": {
+    "inputs": {
+      "ckpt_name": "",
+      "auto_vpred": true,
+      "sampling": "normal",
+      "zsnr": false,
+      "multiplier": 0.6
+    },
+    "class_type": "D2 Checkpoint Loader",
+    "_meta": {
+      "title": "D2 Checkpoint Loader"
+    }
+  },
+  "11": {
+    "inputs": {
+      "filename_prefix": [
+        "13",
+        0
+      ],
+      "preview_only": false,
+      "format": "webp",
+      "lossless": true,
+      "quality": 80,
+      "fps": 6,
+      "eagle_folder": "",
+      "memo_text": "",
+      "popup_image": 0,
+      "images": [
+        "14",
+        0
+      ],
+      "d2_pipe": [
+        "14",
+        9
+      ]
+    },
+    "class_type": "D2 Save Image Eagle",
+    "_meta": {
+      "title": "D2 Save Image Eagle"
+    }
+  },
+  "13": {
+    "inputs": {
+      "format": "%date:yyyyMMdd-hhmmss%_%arg_1:ckpt_name%",
+      "arg_count": 3,
+      "normalization": true,
+      "seed": 60997706109183,
+      "arg_1": [
+        "18",
+        1
+      ]
+    },
+    "class_type": "D2 Filename Template",
+    "_meta": {
+      "title": "D2 Filename Template"
+    }
+  },
+  "14": {
+    "inputs": {
+      "seed": 913571682214506,
+      "steps": 20,
+      "cfg": 5,
+      "sampler_name": "euler_ancestral",
+      "scheduler": "simple",
+      "denoise": 1,
+      "preview_method": "auto",
+      "positive": "",
+      "negative": "",
+      "model": [
+        "10",
+        0
+      ],
+      "clip": [
+        "10",
+        1
+      ],
+      "vae": [
+        "10",
+        2
+      ],
+      "latent_image": [
+        "15",
+        5
+      ],
+      "cnet_stack": [
+        "24",
+        0
+      ],
+      "d2_pipe": [
+        "18",
+        0
+      ]
+    },
+    "class_type": "D2 KSampler",
+    "_meta": {
+      "title": "D2 KSampler"
+    }
+  },
+  "15": {
+    "inputs": {
+      "preset": "custom",
+      "width": 1024,
+      "height": 1024,
+      "swap_dimensions": false,
+      "upscale_factor": 1,
+      "prescale_factor": 1,
+      "round_method": "Round",
+      "batch_size": 1
+    },
+    "class_type": "D2 Size Selector",
+    "_meta": {
+      "title": "D2 Size Selector"
+    }
+  },
+  "16": {
+    "inputs": {
+      "prompt": "1girl",
+      "comment_type": "# + // + /**/",
+      "insert_lora": "CHOOSE",
+      "token_count": false
+    },
+    "class_type": "D2 Prompt",
+    "_meta": {
+      "title": "Positive"
+    }
+  },
+  "17": {
+    "inputs": {
+      "prompt": "long hair",
+      "comment_type": "# + // + /**/",
+      "insert_lora": "CHOOSE",
+      "token_count": false
+    },
+    "class_type": "D2 Prompt",
+    "_meta": {
+      "title": "Negative"
+    }
+  },
+  "18": {
+    "inputs": {
+      "ckpt_name": [
+        "10",
+        3
+      ],
+      "positive": [
+        "21",
+        0
+      ],
+      "negative": [
+        "20",
+        0
+      ]
+    },
+    "class_type": "D2 Pipe",
+    "_meta": {
+      "title": "D2 Pipe"
+    }
+  },
+  "19": {
+    "inputs": {
+      "string_a": "best quality",
+      "string_b": [
+        "16",
+        0
+      ],
+      "delimiter": ","
+    },
+    "class_type": "StringConcatenate",
+    "_meta": {
+      "title": "Positive Quality"
+    }
+  },
+  "20": {
+    "inputs": {
+      "string_a": [
+        "17",
+        0
+      ],
+      "string_b": "worst quality",
+      "delimiter": ","
+    },
+    "class_type": "StringConcatenate",
+    "_meta": {
+      "title": "Negative Quality"
+    }
+  },
+  "21": {
+    "inputs": {
+      "text": [
+        "19",
+        0
+      ],
+      "seed": 0,
+      "autorefresh": "No"
+    },
+    "class_type": "DPRandomGenerator",
+    "_meta": {
+      "title": "Random Prompts"
+    }
+  },
+  "24": {
+    "inputs": {
+      "controlnet_name": "",
+      "strength": [
+        "26",
+        0
+      ],
+      "start_percent": 0,
+      "end_percent": [
+        "26",
+        0
+      ],
+      "image": [
+        "25",
+        0
+      ]
+    },
+    "class_type": "D2 Controlnet Loader",
+    "_meta": {
+      "title": "D2 Controlnet Loader"
+    }
+  },
+  "25": {
+    "inputs": {
+      "image": "",
+      "Open Mask Editor": 0
+    },
+    "class_type": "D2 Load Image",
+    "_meta": {
+      "title": "D2 Load Image"
+    }
+  },
+  "26": {
+    "inputs": {
+      "value": 0
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Weight"
+    }
+  }
+}

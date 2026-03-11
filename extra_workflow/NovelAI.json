@@ -1,0 +1,197 @@
+{
+  "11": {
+    "inputs": {
+      "filename_prefix": "%date:yyyyMMdd-hhmmss%_NAI",
+      "preview_only": false,
+      "format": "webp",
+      "lossless": true,
+      "quality": 80,
+      "fps": 6,
+      "eagle_folder": "",
+      "memo_text": "",
+      "popup_image": 0,
+      "images": [
+        "21",
+        0
+      ],
+      "d2_pipe": [
+        "18",
+        0
+      ]
+    },
+    "class_type": "D2 Save Image Eagle",
+    "_meta": {
+      "title": "D2 Save Image Eagle"
+    }
+  },
+  "15": {
+    "inputs": {
+      "preset": "custom",
+      "width": 1024,
+      "height": 1024,
+      "swap_dimensions": false,
+      "upscale_factor": 1,
+      "prescale_factor": 1,
+      "round_method": "Round",
+      "batch_size": 1
+    },
+    "class_type": "D2 Size Selector",
+    "_meta": {
+      "title": "D2 Size Selector"
+    }
+  },
+  "16": {
+    "inputs": {
+      "prompt": "2girls,",
+      "comment_type": "# + // + /**/",
+      "insert_lora": "CHOOSE",
+      "token_count": false
+    },
+    "class_type": "D2 Prompt",
+    "_meta": {
+      "title": "Positive"
+    }
+  },
+  "17": {
+    "inputs": {
+      "prompt": "long hair",
+      "comment_type": "# + // + /**/",
+      "insert_lora": "CHOOSE",
+      "token_count": false
+    },
+    "class_type": "D2 Prompt",
+    "_meta": {
+      "title": "Negative"
+    }
+  },
+  "18": {
+    "inputs": {
+      "positive": [
+        "22",
+        0
+      ],
+      "negative": [
+        "23",
+        0
+      ],
+      "width": [
+        "15",
+        0
+      ],
+      "height": [
+        "15",
+        1
+      ]
+    },
+    "class_type": "D2 Pipe",
+    "_meta": {
+      "title": "D2 Pipe"
+    }
+  },
+  "19": {
+    "inputs": {
+      "string_a": "best quality",
+      "string_b": [
+        "16",
+        0
+      ],
+      "delimiter": ","
+    },
+    "class_type": "StringConcatenate",
+    "_meta": {
+      "title": "Positive Quality"
+    }
+  },
+  "20": {
+    "inputs": {
+      "string_a": [
+        "17",
+        0
+      ],
+      "string_b": "worst quality",
+      "delimiter": ","
+    },
+    "class_type": "StringConcatenate",
+    "_meta": {
+      "title": "Negative Quality"
+    }
+  },
+  "21": {
+    "inputs": {
+      "limit_opus_free": true,
+      "width": [
+        "18",
+        10
+      ],
+      "height": [
+        "18",
+        11
+      ],
+      "positive": [
+        "18",
+        2
+      ],
+      "negative": [
+        "18",
+        3
+      ],
+      "steps": 28,
+      "cfg": 5,
+      "variety": false,
+      "decrisper": false,
+      "smea": "none",
+      "sampler": "k_euler_ancestral",
+      "scheduler": "native",
+      "seed": 8105475833,
+      "uncond_scale": 1,
+      "cfg_rescale": 0,
+      "keep_alpha": true
+    },
+    "class_type": "GenerateNAID",
+    "_meta": {
+      "title": "Generate ✒️🅝🅐🅘"
+    }
+  },
+  "22": {
+    "inputs": {
+      "weight_per_brace": 0.05,
+      "syntax_mode": "numeric",
+      "text": [
+        "25",
+        0
+      ]
+    },
+    "class_type": "PromptToNAID",
+    "_meta": {
+      "title": "Convert Prompt ✒️🅝🅐🅘"
+    }
+  },
+  "23": {
+    "inputs": {
+      "weight_per_brace": 0.05,
+      "syntax_mode": "numeric",
+      "text": [
+        "20",
+        0
+      ]
+    },
+    "class_type": "PromptToNAID",
+    "_meta": {
+      "title": "Convert Prompt ✒️🅝🅐🅘"
+    }
+  },
+  "25": {
+    "inputs": {
+      "text": [
+        "19",
+        0
+      ],
+      "seed": 0,
+      "autorefresh": "No"
+    },
+    "class_type": "DPRandomGenerator",
+    "_meta": {
+      "title": "Random Prompts"
+    }
+  }
+}

@@ -1,0 +1,103 @@
+# 画像を出力するノード（通常はKSampler）
+output_node_id: 11
+
+# 絶対に必要な設定
+required:
+  -
+    id: "positive"
+    workflow:
+      search_type: "title"
+      search_value: "Positive"
+      input_name: "prompt"
+  -
+    id: "negative"
+    workflow:
+      search_type: "title"
+      search_value: "Negative"
+      input_name: "prompt"
+  # -
+  #   id: "checkpoint"
+  #   workflow:
+  #     search_type: "id"
+  #     search_value: 24
+  #     input_name: "ckpt_name"
+  -
+    id: "seed"
+    workflow:
+      search_type: "class_type"
+      search_value: "GenerateNAID"
+      input_name: "seed"
+
+# 追加ノード
+optional:
+  -
+    id: "size_preset"
+    input:
+      title: "Image Size Preset"
+      type: "list"
+      value: ["D2 Size Selector", "input", "required", preset, 0]
+    workflow:
+      search_type: "class_type"
+      search_value: "D2 Size Selector"
+      input_name: "preset"
+  -
+    id: "width"
+    input:
+      title: "Width"
+      type: "number"
+      default: 1024
+    workflow:
+      search_type: "class_type"
+      search_value: "D2 Size Selector"
+      input_name: "width"
+  -
+    id: "height"
+    input:
+      title: "Height"
+      type: "number"
+      default: 1024
+    workflow:
+      search_type: "class_type"
+      search_value: "D2 Size Selector"
+      input_name: "height"
+  -
+    id: "positive_quality"
+    input:
+      title: "Positive Quality"
+      type: "textarea"
+      default: "wagashi \\(dagashiya\\), shacho_\\(ko_no_ha\\), (shirabi:0.2), year 2024, (very aesthetic, amazing quality, absurdres:1.4)"
+    workflow:
+      search_type: "title"
+      search_value: "Positive Quality"
+      input_name: "string_a"
+  -
+    id: "negative_quality"
+    input:
+      title: "Negative Quality"
+      type: "textarea"
+      default: "Negative prompt:looking back, multiple_views, (plump, curvy, chubby:2), huge ass, ribs, thick thighs, wide hip,  flat color, blurry, lowres, error, film grain, scan artifacts, worst quality, bad quality, jpeg artifacts, very displeasing, chromatic aberration, logo, dated, signature, multiple views, gigantic breasts, artistic error, dithering, halftone, screentone"
+    workflow:
+      search_type: "title"
+      search_value: "Negative Quality"
+      input_name: "string_b"
+  -
+    id: "image_format"
+    input:
+      title: "Image Format"
+      type: "list"
+      value: ["D2 Save Image Eagle", "input", "required", "format", 0]
+    workflow:
+      search_type: "class_type"
+      search_value: "D2 Save Image Eagle"
+      input_name: "format"
+  -
+    id: "memo"
+    input:
+      title: "Memo"
+      type: "text"
+    workflow:
+      search_type: "class_type"
+      search_value: "D2 Save Image Eagle"
+      input_name: "memo_text"
+
+
