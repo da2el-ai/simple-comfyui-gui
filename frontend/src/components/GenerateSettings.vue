@@ -149,7 +149,7 @@ const hiddenOptionalItemIds = computed(() => {
     }
 
     const configItem = configOptional.find((optional) => optional.id === item.id)
-    const targets = configItem?.ui?.targets
+    const targets = configItem?.switch?.ui?.targets
     if (!Array.isArray(targets)) {
       continue
     }

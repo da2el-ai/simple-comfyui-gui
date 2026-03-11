@@ -48,11 +48,14 @@ export type WorkflowConfigOptionalItem = {
     value?: Array<string | number>
     default?: DynamicInputValue
   }
-  workflow?: Partial<WorkflowInputBinding> & {
-    targets?: WorkflowDeleteTarget[]
-  }
-  ui?: {
-    targets?: string[]
+  workflow?: WorkflowInputBinding
+  switch?: {
+    workflow?: {
+      targets?: WorkflowDeleteTarget[]
+    }
+    ui?: {
+      targets?: string[]
+    }
   }
 }
 

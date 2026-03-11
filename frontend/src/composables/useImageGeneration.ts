@@ -246,7 +246,7 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
       }
 
       const config = optionals.find((optional) => optional.id === item.id)
-      const targets = config?.workflow?.targets
+      const targets = config?.switch?.workflow?.targets
       if (!Array.isArray(targets)) {
         continue
       }
