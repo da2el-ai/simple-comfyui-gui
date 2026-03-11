@@ -23,6 +23,7 @@ export type TDynamicInputItem = {
   type: DynamicInputType
   options: string[]
   value: DynamicInputValue
+  children?: TDynamicInputItem[]
 }
 
 export type WorkflowSearchType = 'class_type' | 'id' | 'title'
@@ -53,9 +54,7 @@ export type WorkflowConfigOptionalItem = {
     workflow?: {
       targets?: WorkflowDeleteTarget[]
     }
-    ui?: {
-      targets?: string[]
-    }
+    items?: WorkflowConfigOptionalItem[]
   }
 }
 

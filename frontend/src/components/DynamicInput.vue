@@ -56,7 +56,7 @@ const emit = defineEmits<{
       rows="3"
     />
 
-    <label v-if="props.type === 'switch'" class="row cursor-pointer">
+    <label v-if="props.type === 'switch'" class="">
       <input
         type="checkbox"
         class="toggle"

@@ -106,7 +106,8 @@ export function useGenerateSettings() {
     // 保存済み値をワークフロー別に復元する（リスト項目はオプション一覧に含まれる値のみ採用）
     const savedValues = loadSettings().optionalValues[workflowName]
     if (savedValues) {
-      for (const item of items) {
+      const allItems = items.flatMap((item) => [item, ...(item.children ?? [])])
+      for (const item of allItems) {
         if (item.type === 'image' || item.type === 'seed') {
           continue
         }
@@ -136,6 +137,7 @@ export function useGenerateSettings() {
    */
   function handleOptionalValueChange(itemId: string, value: DynamicInputValue): void {
     const target = optionalItems.value.find((item) => item.id === itemId)
+      ?? optionalItems.value.flatMap((item) => item.children ?? []).find((c) => c.id === itemId)
     if (!target) {
       return
     }
@@ -154,18 +156,38 @@ export function useGenerateSettings() {
     configOptional: WorkflowConfigOptionalItem[],
     info: ComfyObjectInfo | null
   ): TDynamicInputItem[] {
-    return configOptional.map((item) => {
-      const options = resolveListOptions(item, info)
-      const value = resolveInitialValue(item, options)
+    return configOptional
+      .filter((item) => !configOptional.some(
+        (parent) => parent.switch?.items?.some((child) => child.id === item.id)
+      ))
+      .map((item) => {
+        const options = resolveListOptions(item, info)
+        const value = resolveInitialValue(item, options)
 
-      return {
-        id: item.id,
-        title: item.input.title,
-        type: item.input.type,
-        options,
-        value
-      }
-    })
+        const result: TDynamicInputItem = {
+          id: item.id,
+          title: item.input.title,
+          type: item.input.type,
+          options,
+          value
+        }
+
+        if (item.input.type === 'switch' && item.switch?.items) {
+          result.children = item.switch.items.map((child) => {
+            const childOptions = resolveListOptions(child, info)
+            const childValue = resolveInitialValue(child, childOptions)
+            return {
+              id: `${item.id}.${child.id}`,
+              title: child.input.title,
+              type: child.input.type,
+              options: childOptions,
+              value: childValue
+            }
+          })
+        }
+
+        return result
+      })
   }
 
   /**

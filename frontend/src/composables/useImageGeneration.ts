@@ -172,6 +172,17 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
       }
 
       if (item.type === 'switch') {
+        if (item.children) {
+          for (const child of item.children) {
+            if (child.type === 'seed') {
+              valueMap[child.id] = Math.floor(Math.random() * 1_000_000_000)
+              continue
+            }
+            if (typeof child.value === 'boolean') continue
+            if (child.value === '') continue
+            valueMap[child.id] = child.value
+          }
+        }
         continue
       }
 
@@ -323,7 +334,20 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     if (!targetItems) {
       return null
     }
-    return targetItems.find((item) => item.id === itemId) ?? null
+
+    const direct = targetItems.find((item) => item.id === itemId) ?? null
+    if (direct) return direct
+
+    // dotted ID: search inside switch.items
+    if (category === 'optional' && itemId.includes('.')) {
+      const [parentId, childId] = itemId.split('.', 2)
+      const parent = targetItems.find((item) => item.id === parentId) as WorkflowConfigOptionalItem | undefined
+      if (parent?.switch?.items) {
+        return parent.switch.items.find((child) => child.id === childId) ?? null
+      }
+    }
+
+    return null
   }
 
   /**

@@ -103,7 +103,7 @@ function handleDrop(event: DragEvent): void {
 </script>
 
 <template>
-  <div class="rounded-md" style="max-width:20rem; background-color:var(--color_white-dark);">
+  <div class="rounded-md" style="max-width:30rem; background-color:var(--color_white-dark);">
     <input
       ref="fileInputRef"
       type="file"

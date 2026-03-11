@@ -137,38 +137,12 @@ const errorMessage = computed(
 )
 
 /**
- * switch型オプションの状態に基づいて非表示対象のoptional項目IDを算出する。
- */
-const hiddenOptionalItemIds = computed(() => {
-  const hiddenIds = new Set<string>()
-  const configOptional = workflowConfig.value?.optional ?? []
-
-  for (const item of optionalItems.value) {
-    if (item.type !== 'switch' || item.value !== false) {
-      continue
-    }
-
-    const configItem = configOptional.find((optional) => optional.id === item.id)
-    const targets = configItem?.switch?.ui?.targets
-    if (!Array.isArray(targets)) {
-      continue
-    }
-
-    for (const targetId of targets) {
-      hiddenIds.add(targetId)
-    }
-  }
-
-  return hiddenIds
-})
-
-/**
  * 画面に表示するoptional項目を返す。
- * seed型とswitch指定で非表示になった項目は除外する。
+ * seed型は除外する。
  */
 const visibleOptionalItems = computed(() =>
   optionalItems.value.filter(
-    (item) => item.type !== 'seed' && !hiddenOptionalItemIds.value.has(item.id)
+    (item) => item.type !== 'seed'
   )
 )
 
@@ -497,12 +471,16 @@ function startAutoSave(): void {
     optionalItems,
     (items) => {
       if (!currentWorkflow.value || items.length === 0) return
-      const values = Object.fromEntries(
-        items
-          .filter((item) => item.type !== 'seed')
-          .map((item) => [item.id, item.value])
-      )
-      saveOptionalValues(currentWorkflow.value, values)
+      const entries: [string, import('../types/api').DynamicInputValue][] = []
+      for (const item of items) {
+        if (item.type !== 'seed') entries.push([item.id, item.value])
+        if (item.children) {
+          for (const child of item.children) {
+            if (child.type !== 'seed') entries.push([child.id, child.value])
+          }
+        }
+      }
+      saveOptionalValues(currentWorkflow.value, Object.fromEntries(entries))
     },
     { deep: true }
   )
@@ -593,7 +571,7 @@ function startAutoSave(): void {
     <details class="mb-6">
       <summary>Advanced Settings</summary>
 
-      <div class="flex gap-4 mb-6" style="flex-wrap: wrap">
+      <div class="flex gap-4 mb-6 wrap" style="padding-top:1rem">
         <div class="w-full">
           <div class="prompt-label-row">
             <label class="block text-sm font-medium mb-1">Negative Prompt</label>
@@ -612,7 +590,24 @@ function startAutoSave(): void {
         </div>
 
         <template v-for="item in visibleOptionalItems" :key="item.id">
-          <DynamicInput :type="item.type" :title="item.title" :value="item.value" :options="item.options"
+          <!-- Switch group -->
+          <div v-if="item.type === 'switch'" class="w-full border rounded-md p-4 mb-2 flex gap-4 wrap" style="background-color: var(--color_aqua-light);">
+            <DynamicInput :type="item.type" :title="item.title" :value="item.value" :options="item.options"
+              @update:value="(value) => handleOptionalValueChange(item.id, value)" />
+
+            <template v-if="item.value && item.children">
+              <DynamicInput v-for="child in item.children" :key="child.id"
+                :type="child.type" :title="child.title" :value="child.value" :options="child.options"
+                :image-file="imageFileMap[child.id] ?? null"
+                :image-mask-overlay="child.type === 'image' ? maskOverlayDataUrl : ''"
+                @update:value="(value) => handleOptionalValueChange(child.id, value)"
+                @update:image-file="(file) => handleOptionalImageFileChange(child.id, file)"
+                @open-mask-editor="openMaskEditor(child.id)" />
+            </template>
+          </div>
+
+          <!-- Non-switch items -->
+          <DynamicInput v-else :type="item.type" :title="item.title" :value="item.value" :options="item.options"
             :image-file="imageFileMap[item.id] ?? null"
             :image-mask-overlay="item.type === 'image' ? maskOverlayDataUrl : ''"
             @update:value="(value) => handleOptionalValueChange(item.id, value)"
