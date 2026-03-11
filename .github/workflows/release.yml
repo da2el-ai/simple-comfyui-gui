@@ -90,11 +90,31 @@ jobs:
           name: windows-zip
           path: Simple-ComfyUI-GUI-Windows.zip
 
+  build-extra-workflow:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Package extra_workflow zip
+        shell: bash
+        run: |
+          set -euo pipefail
+          zip -r extra_workflow.zip extra_workflow
+
+      - name: Upload extra workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extra-workflow-zip
+          path: extra_workflow.zip
+
   publish-release:
     runs-on: ubuntu-latest
     needs:
       - build-macos
       - build-windows
+      - build-extra-workflow
 
     steps:
       - name: Download artifacts
@@ -108,4 +128,5 @@ jobs:
           files: |
             dist-artifacts/macos-zip/Simple-ComfyUI-GUI-macOS.zip
             dist-artifacts/windows-zip/Simple-ComfyUI-GUI-Windows.zip
+            dist-artifacts/extra-workflow-zip/extra_workflow.zip
           generate_release_notes: true
