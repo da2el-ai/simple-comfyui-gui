@@ -130,7 +130,7 @@ defineExpose({ open, close })
   border: 1px solid #d1d5db;
   border-radius: 0.375rem;
   font: inherit;
-  font-size: 0.875rem;
+  font-size: 1rem;
   margin-bottom: 0.75rem;
   box-sizing: border-box;
 }
