@@ -286,12 +286,11 @@ function showTicker(message: string) {
     tickerVisible.value = false
   }, 2500)
 }
+
+defineExpose({ open, close, isOpen })
 </script>
 
 <template>
-  <!-- トグルボタン -->
-  <button class="ps-toggle-btn" @click="isOpen ? close() : open()">Prompts</button>
-
   <!-- Ticker -->
   <PromptTicker :message="tickerMessage" :visible="tickerVisible" />
 

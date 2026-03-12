@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import AutoComplete from './AutoComplete.vue'
 import DynamicInput from './DynamicInput.vue'
 import MaskEditor from './MaskEditor.vue'
 import WeightButtons from './WeightButtons.vue'
 import ImagePreview from './ImagePreview.vue'
 import ImageGallery from './ImageGallery.vue'
 import CheckpointSelector from './CheckpointSelector.vue'
-import PromptSelector from './PromptSelector.vue'
+import PromptInput from './PromptInput.vue'
 import { useGenerateSettings } from '../composables/useGenerateSettings'
 import { useImageGeneration } from '../composables/useImageGeneration'
 import { loadSettings, saveSettings, saveOptionalValues } from '../composables/useLocalSettings'
@@ -24,9 +23,11 @@ const imageOriginalRefMap = ref<Record<string, ComfyOriginalRef | null>>({})
 const maskOverlayDataUrl = ref('')
 const isMaskEditorOpen = ref(false)
 const activeImageInputId = ref('')
-const isPositiveExpanded = ref(false)
-const positiveTextareaRef = ref<HTMLTextAreaElement | null>(null)
-const negativeTextareaRef = ref<HTMLTextAreaElement | null>(null)
+const positiveInputRef = ref<InstanceType<typeof PromptInput> | null>(null)
+const negativeInputRef = ref<InstanceType<typeof PromptInput> | null>(null)
+const positiveTextareaRef = computed<HTMLTextAreaElement | null>(
+  () => positiveInputRef.value?.textareaRef ?? null
+)
 
 // --- 設定管理 composable ---
 const settings = useGenerateSettings()
@@ -35,6 +36,7 @@ const {
   workflowConfig,
   workflowData,
   checkpointList,
+  loraList,
   workflowList,
   currentCheckpoint,
   currentWorkflow,
@@ -83,14 +85,6 @@ function openGallery(index: number): void {
  */
 function closeGallery(): void {
   showGallery.value = false
-}
-
-/**
- * Positive Prompt入力欄の拡張表示を切り替える。
- * @returns なし。
- */
-function togglePositiveExpand(): void {
-  isPositiveExpanded.value = !isPositiveExpanded.value
 }
 
 // --- ウェイト調整（キーボードショートカット用） ---
@@ -505,20 +499,8 @@ function startAutoSave(): void {
       
       <div>
         <div class="mb-4">
-          <div class="prompt-label-row">
-            <label class="block text-sm font-medium mb-1">Positive Prompt</label>
-            <PromptSelector v-model="positive" :target-element="positiveTextareaRef" />
-          </div>
-          <div class="relative">
-            <textarea ref="positiveTextareaRef" v-model="positive" placeholder="Enter your prompt here..."
-              class="w-full p-2 border rounded-md resize-vertical"
-              :style="{ height: isPositiveExpanded ? '20em' : '8em' }" rows="4"></textarea>
-
-            <button type="button" class="resize-btn text-sm" @click="togglePositiveExpand">
-              {{ isPositiveExpanded ? '◤' : '◢' }}
-            </button>
-          </div>
-          <AutoComplete v-model="positive" :target-element="positiveTextareaRef" />
+          <label class="block text-sm font-medium mb-1">Positive Prompt</label>
+          <PromptInput ref="positiveInputRef" v-model="positive" :lora-list="loraList" placeholder="Enter your prompt here..." />
         </div>
 
         <div class="flex gap-4 mb-4">
@@ -573,15 +555,8 @@ function startAutoSave(): void {
 
       <div class="flex gap-4 mb-6 wrap" style="padding-top:1rem">
         <div class="w-full">
-          <div class="prompt-label-row">
-            <label class="block text-sm font-medium mb-1">Negative Prompt</label>
-            <PromptSelector v-model="negative" :target-element="negativeTextareaRef" />
-          </div>
-          <div class="relative">
-            <textarea ref="negativeTextareaRef" v-model="negative" placeholder="Enter negative prompt here..."
-              class="w-full p-2 border rounded-md resize-vertical" rows="2"></textarea>
-            <AutoComplete v-model="negative" :target-element="negativeTextareaRef" />
-          </div>
+          <label class="block text-sm font-medium mb-1">Negative Prompt</label>
+          <PromptInput ref="negativeInputRef" v-model="negative" :lora-list="loraList" placeholder="Enter negative prompt here..." />
         </div>
 
         <div v-if="showCheckpointSetting" class="w-full">
@@ -624,21 +599,4 @@ function startAutoSave(): void {
 </template>
 
 <style scoped>
-.prompt-label-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
-
-.resize-btn {
-  position: absolute;
-  padding: 0;
-  right: 0.2rem;
-  bottom: 0.5rem;
-  border: none;
-  background: transparent;
-  font-size: .8rem;
-  line-height: 1;
-}
 </style>

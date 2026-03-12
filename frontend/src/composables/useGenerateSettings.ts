@@ -31,6 +31,7 @@ export function useGenerateSettings() {
   const workflowData = ref<WorkflowData | null>(null)
 
   const checkpointList = ref<string[]>([])
+  const loraList = ref<string[]>([])
   const workflowList = ref<string[]>([])
   const currentCheckpoint = ref('')
   const currentWorkflow = ref('')
@@ -47,6 +48,7 @@ export function useGenerateSettings() {
       endpoint.value = await fetchComfyUIEndpoint()
       objectInfo.value = await fetchComfyObjectInfo(endpoint.value)
       checkpointList.value = extractCheckpointList(objectInfo.value)
+      loraList.value = extractLoraList(objectInfo.value)
 
       // 保存済みチェックポイントをリスト内で優先選択する
       if (saved?.currentCheckpoint && checkpointList.value.includes(saved.currentCheckpoint)) {
@@ -268,6 +270,25 @@ export function useGenerateSettings() {
   }
 
   /**
+   * object_infoからLoRA名一覧を抽出する。
+   * @param info ComfyUIのobject_info。
+   * @returns LoRA名の配列。
+   */
+  function extractLoraList(info: ComfyObjectInfo | null): string[] {
+    const value = getNestedValue(info, [
+      'LoraLoader',
+      'input',
+      'required',
+      'lora_name',
+      0
+    ])
+    if (!Array.isArray(value)) {
+      return []
+    }
+    return value.map((entry) => String(entry))
+  }
+
+  /**
    * オブジェクトからパス配列を辿ってネスト値を取得する。
    * @param source 参照元オブジェクト。
    * @param path キーまたはインデックスの配列。
@@ -306,6 +327,7 @@ export function useGenerateSettings() {
     workflowConfig,
     workflowData,
     checkpointList,
+    loraList,
     workflowList,
     currentCheckpoint,
     currentWorkflow,
