@@ -9,6 +9,7 @@ export type ComfyUIEndpointResponse = {
 export type DynamicInputType =
   | 'list'
   | 'text'
+  | 'prompt'
   | 'number'
   | 'textarea'
   | 'image'

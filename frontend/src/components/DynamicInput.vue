@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import DynamicInputImage from './DynamicInputImage.vue'
+import PromptInput from './PromptInput.vue'
 import type { DynamicInputType, DynamicInputValue } from '../types/api'
+
 
 interface Props {
   type: DynamicInputType
   title: string
   value: DynamicInputValue
+  loraList?: string[]
   options?: string[]
   imageFile?: File | null
   imageMaskOverlay?: string
@@ -65,6 +68,14 @@ const emit = defineEmits<{
       />
       <!-- <span class="text-sm">有効</span> -->
     </label>
+
+    <PromptInput
+      v-if="props.type === 'prompt'"
+      :model-value="props.value as string"
+      @update:modelValue="emit('update:value', $event)"
+      :lora-list="loraList"
+      placeholder="Enter your prompt here..."
+    />
 
     <DynamicInputImage
       v-if="props.type === 'image'"

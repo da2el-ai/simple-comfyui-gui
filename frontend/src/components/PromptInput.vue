@@ -88,23 +88,6 @@ function insertLora(loraTag: string): void {
 
 <template>
   <div class="prompt-input">
-    <!-- ツールバー -->
-    <div class="prompt-input__toolbar">
-      <button type="button" class="prompt-input__btn" :disabled="!canUndo" title="Undo" @mousedown.prevent="undo">Undo</button>
-      <button type="button" class="prompt-input__btn" :disabled="!canRedo" title="Redo" @mousedown.prevent="redo">Redo</button>
-      <button type="button" class="prompt-input__btn" title="カーソル左" @mousedown.prevent="moveCursor('left')">◀</button>
-      <button type="button" class="prompt-input__btn" title="カーソル右" @mousedown.prevent="moveCursor('right')">▶</button>
-      <button type="button" class="prompt-input__btn" title="LoRA挿入" @click="loraSelectorRef?.open()">Lora</button>
-      <button type="button" class="prompt-input__btn" title="PromptSelector" @click="promptSelectorRef?.isOpen ? promptSelectorRef?.close() : promptSelectorRef?.open()">Prompts</button>
-      <button
-        type="button"
-        class="prompt-input__btn"
-        :title="isExpanded ? '縮小' : '拡大'"
-        @click="toggleExpand"
-      >
-        {{ isExpanded ? '◤' : '◢' }}
-      </button>
-    </div>
 
     <!-- テキストエリア -->
     <textarea
@@ -116,6 +99,26 @@ function insertLora(loraTag: string): void {
       rows="4"
       @input="onInput"
     ></textarea>
+
+    <!-- ツールバー -->
+    <div class="prompt-input__toolbar">
+      <button type="button" class="prompt-input__btn" :disabled="!canUndo" title="Undo" @mousedown.prevent="undo"><i class="i-icomoon-undo"></i></button>
+      <button type="button" class="prompt-input__btn" :disabled="!canRedo" title="Redo" @mousedown.prevent="redo"><i class="i-icomoon-redo"></i></button>
+      <button type="button" class="prompt-input__btn" title="カーソル左" @mousedown.prevent="moveCursor('left')">◀</button>
+      <button type="button" class="prompt-input__btn" title="カーソル右" @mousedown.prevent="moveCursor('right')">▶</button>
+      <!-- <button type="button" class="prompt-input__btn" title="ウェイトUp" @mousedown.prevent="moveCursor('left')"><i class="i-icomoon-plus"></i></button> -->
+      <!-- <button type="button" class="prompt-input__btn" title="ウェイトDown" @mousedown.prevent="moveCursor('right')"><i class="i-icomoon-minus"></i></button> -->
+      <button type="button" class="prompt-input__btn" title="LoRA挿入" @click="loraSelectorRef?.open()"><i class="i-icomoon-user"></i></button>
+      <button type="button" class="prompt-input__btn" title="PromptSelector" @click="promptSelectorRef?.isOpen ? promptSelectorRef?.close() : promptSelectorRef?.open()"><i class="i-icomoon-book"></i></button>
+      <button
+        type="button"
+        class="prompt-input__btn"
+        :title="isExpanded ? '縮小' : '拡大'"
+        @click="toggleExpand"
+      >
+        {{ isExpanded ? '◤' : '◢' }}
+      </button>
+    </div>
 
     <!-- オートコンプリート -->
     <AutoComplete v-model="modelValue" :target-element="textareaRef" @applied="saveImmediate" />
@@ -133,16 +136,18 @@ function insertLora(loraTag: string): void {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-bottom: 4px;
+  margin-bottom: .8rem;
   flex-wrap: wrap;
 }
 
 .prompt-input__btn {
-  padding: 4px 8px;
-  font-size: 0.75rem;
+  min-width: 2.2rem;
+  padding: .3rem;
+  font-size: 1rem;
   border: 1px solid #d1d5db;
   border-radius: 4px;
   background: #f9fafb;
+  color: #000;
   cursor: pointer;
   line-height: 1.2;
 }

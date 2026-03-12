@@ -564,6 +564,7 @@ function startAutoSave(): void {
           <CheckpointSelector v-model="currentCheckpoint" :checkpoint-list="checkpointList" />
         </div>
 
+        <!-- 以下 OptionalItems -->
         <template v-for="item in visibleOptionalItems" :key="item.id">
           <!-- Switch group -->
           <div v-if="item.type === 'switch'" class="w-full border rounded-md p-4 mb-2 flex gap-4 wrap" style="background-color: var(--color_aqua-light);">
@@ -575,6 +576,7 @@ function startAutoSave(): void {
                 :type="child.type" :title="child.title" :value="child.value" :options="child.options"
                 :image-file="imageFileMap[child.id] ?? null"
                 :image-mask-overlay="child.type === 'image' ? maskOverlayDataUrl : ''"
+                :lora-list="loraList"
                 @update:value="(value) => handleOptionalValueChange(child.id, value)"
                 @update:image-file="(file) => handleOptionalImageFileChange(child.id, file)"
                 @open-mask-editor="openMaskEditor(child.id)" />
@@ -585,6 +587,7 @@ function startAutoSave(): void {
           <DynamicInput v-else :type="item.type" :title="item.title" :value="item.value" :options="item.options"
             :image-file="imageFileMap[item.id] ?? null"
             :image-mask-overlay="item.type === 'image' ? maskOverlayDataUrl : ''"
+            :lora-list="loraList"
             @update:value="(value) => handleOptionalValueChange(item.id, value)"
             @update:image-file="(file) => handleOptionalImageFileChange(item.id, file)"
             @open-mask-editor="openMaskEditor(item.id)" />
