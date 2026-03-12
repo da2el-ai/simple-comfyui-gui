@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { nextTick, ref } from 'vue'
+import { nextTick, watch, ref } from 'vue'
 import AutoComplete from './AutoComplete.vue'
 import LoraSelector from './LoraSelector.vue'
 import PromptSelector from './PromptSelector.vue'
+import { useUndoRedo } from '../composables/useUndoRedo'
 
 withDefaults(defineProps<{
   placeholder?: string
@@ -19,7 +20,20 @@ const isExpanded = ref(false)
 const promptSelectorRef = ref<InstanceType<typeof PromptSelector> | null>(null)
 const loraSelectorRef = ref<InstanceType<typeof LoraSelector> | null>(null)
 
+const { canUndo, canRedo, undo, redo, onInput, saveImmediate } = useUndoRedo(modelValue)
+
 defineExpose({ textareaRef })
+
+
+// 初期履歴保存フラグ
+let initialHistorySaved = false
+
+watch(modelValue, (val) => {
+  if (!initialHistorySaved && val && canUndo.value === false && canRedo.value === false) {
+    saveImmediate()
+    initialHistorySaved = true
+  }
+})
 
 /**
  * テキストエリアの拡大・縮小を切り替える。
@@ -76,8 +90,8 @@ function insertLora(loraTag: string): void {
   <div class="prompt-input">
     <!-- ツールバー -->
     <div class="prompt-input__toolbar">
-      <button type="button" class="prompt-input__btn" disabled title="Undo">Undo</button>
-      <button type="button" class="prompt-input__btn" disabled title="Redo">Redo</button>
+      <button type="button" class="prompt-input__btn" :disabled="!canUndo" title="Undo" @mousedown.prevent="undo">Undo</button>
+      <button type="button" class="prompt-input__btn" :disabled="!canRedo" title="Redo" @mousedown.prevent="redo">Redo</button>
       <button type="button" class="prompt-input__btn" title="カーソル左" @mousedown.prevent="moveCursor('left')">◀</button>
       <button type="button" class="prompt-input__btn" title="カーソル右" @mousedown.prevent="moveCursor('right')">▶</button>
       <button type="button" class="prompt-input__btn" title="LoRA挿入" @click="loraSelectorRef?.open()">Lora</button>
@@ -100,13 +114,14 @@ function insertLora(loraTag: string): void {
       class="prompt-input__textarea"
       :style="{ height: isExpanded ? '20em' : '8em' }"
       rows="4"
+      @input="onInput"
     ></textarea>
 
     <!-- オートコンプリート -->
-    <AutoComplete v-model="modelValue" :target-element="textareaRef" />
+    <AutoComplete v-model="modelValue" :target-element="textareaRef" @applied="saveImmediate" />
 
     <!-- プロンプトセレクター -->
-    <PromptSelector ref="promptSelectorRef" v-model="modelValue" :target-element="textareaRef" />
+    <PromptSelector ref="promptSelectorRef" v-model="modelValue" :target-element="textareaRef" @applied="saveImmediate" />
 
     <!-- LoRAセレクター -->
     <LoraSelector ref="loraSelectorRef" :lora-list="loraList" @select="insertLora" />

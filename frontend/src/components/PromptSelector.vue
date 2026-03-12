@@ -20,6 +20,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
+  applied: []
 }>()
 
 // ─── ダイアログ開閉 ─────────────────────────────────────────────────────────
@@ -117,6 +118,7 @@ function insertPrompt(prompt: string) {
   const newVal = before + sep + prompt + after
 
   emit('update:modelValue', newVal)
+  emit('applied')
 
   requestAnimationFrame(() => {
     const cursor = start + sep.length + prompt.length

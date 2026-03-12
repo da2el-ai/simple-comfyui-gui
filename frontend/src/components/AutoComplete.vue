@@ -8,6 +8,10 @@ const props = defineProps<{
 
 const modelValue = defineModel<string>({ default: '' })
 
+const emit = defineEmits<{
+  applied: []
+}>()
+
 const { filterTags } = useAutoCompleteTags()
 
 const filteredTags = ref<string[]>([])
@@ -61,6 +65,7 @@ function selectTag(tag: string): void {
   modelValue.value = newValue
   filteredTags.value = []
   activeTagIndex.value = -1
+  emit('applied')
 
   const newCursor = newTextBefore.length
   nextTick(() => {
