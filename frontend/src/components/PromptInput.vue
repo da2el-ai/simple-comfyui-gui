@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { nextTick, watch, ref } from 'vue'
+import { nextTick, watch, ref, onMounted } from 'vue'
 import AutoComplete from './AutoComplete.vue'
 import LoraSelector from './LoraSelector.vue'
 import PromptSelector from './PromptSelector.vue'
 import { useUndoRedo } from '../composables/useUndoRedo'
+import { useWeightAdjust } from '../composables/useWeightAdjust'
 
 withDefaults(defineProps<{
   placeholder?: string
@@ -35,6 +36,9 @@ watch(modelValue, (val) => {
   }
 })
 
+// --- ウェイト調整（キーボードショートカット用） ---
+const { setWeight } = useWeightAdjust(modelValue, textareaRef)
+
 /**
  * テキストエリアの拡大・縮小を切り替える。
  */
@@ -42,18 +46,18 @@ function toggleExpand(): void {
   isExpanded.value = !isExpanded.value
 }
 
-/**
- * カーソルを指定方向に1文字移動する。
- */
-function moveCursor(direction: 'left' | 'right'): void {
-  const ta = textareaRef.value
-  if (!ta) return
-  const pos = ta.selectionStart ?? 0
-  const next = direction === 'left'
-    ? Math.max(0, pos - 1)
-    : Math.min(ta.value.length, pos + 1)
-  ta.setSelectionRange(next, next)
-}
+// /**
+//  * カーソルを指定方向に1文字移動する。
+//  */
+// function moveCursor(direction: 'left' | 'right'): void {
+//   const ta = textareaRef.value
+//   if (!ta) return
+//   const pos = ta.selectionStart ?? 0
+//   const next = direction === 'left'
+//     ? Math.max(0, pos - 1)
+//     : Math.min(ta.value.length, pos + 1)
+//   ta.setSelectionRange(next, next)
+// }
 
 /**
  * Loraタグをカーソル位置の次の行に挿入する。
@@ -84,6 +88,31 @@ function insertLora(loraTag: string): void {
     ta.focus()
   })
 }
+
+// --- キーボードショートカット ---
+/**
+ * 重み調整のショートカットを処理する。
+ * @param event keydownイベント。
+ * @returns なし。
+ */
+function handleKeyDown(event: KeyboardEvent): void {
+  const isCtrl = event.ctrlKey || event.metaKey
+  if (!isCtrl) return
+
+  if (event.key === 'ArrowUp') {
+    event.preventDefault()
+    void setWeight(0.1)
+  } else if (event.key === 'ArrowDown') {
+    event.preventDefault()
+    void setWeight(-0.1)
+  }
+}
+
+onMounted(()=>{
+  // キーボードショートカットを登録する
+  const ta = textareaRef.value as HTMLTextAreaElement
+  ta.addEventListener('keydown', handleKeyDown)
+})
 </script>
 
 <template>
@@ -104,10 +133,12 @@ function insertLora(loraTag: string): void {
     <div class="prompt-input__toolbar">
       <button type="button" class="prompt-input__btn" :disabled="!canUndo" title="Undo" @mousedown.prevent="undo"><i class="i-icomoon-undo"></i></button>
       <button type="button" class="prompt-input__btn" :disabled="!canRedo" title="Redo" @mousedown.prevent="redo"><i class="i-icomoon-redo"></i></button>
+<!--      
       <button type="button" class="prompt-input__btn" title="カーソル左" @mousedown.prevent="moveCursor('left')">◀</button>
-      <button type="button" class="prompt-input__btn" title="カーソル右" @mousedown.prevent="moveCursor('right')">▶</button>
-      <!-- <button type="button" class="prompt-input__btn" title="ウェイトUp" @mousedown.prevent="moveCursor('left')"><i class="i-icomoon-plus"></i></button> -->
-      <!-- <button type="button" class="prompt-input__btn" title="ウェイトDown" @mousedown.prevent="moveCursor('right')"><i class="i-icomoon-minus"></i></button> -->
+      <button type="button" class="prompt-input__btn" title="カーソル右" @mousedown.prevent="moveCursor('right')">▶</button> 
+-->
+      <button type="button" class="prompt-input__btn" title="ウェイトUp" @mousedown.prevent="setWeight(0.1)"><i class="i-icomoon-plus"></i></button>
+      <button type="button" class="prompt-input__btn" title="ウェイトDown" @mousedown.prevent="setWeight(-0.1)"><i class="i-icomoon-minus"></i></button>
       <button type="button" class="prompt-input__btn" title="LoRA挿入" @click="loraSelectorRef?.open()"><i class="i-icomoon-user"></i></button>
       <button type="button" class="prompt-input__btn" title="PromptSelector" @click="promptSelectorRef?.isOpen ? promptSelectorRef?.close() : promptSelectorRef?.open()"><i class="i-icomoon-book"></i></button>
       <button

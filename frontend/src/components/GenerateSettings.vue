@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import DynamicInput from './DynamicInput.vue'
 import MaskEditor from './MaskEditor.vue'
-import WeightButtons from './WeightButtons.vue'
+// import WeightButtons from './WeightButtons.vue'
 import ImagePreview from './ImagePreview.vue'
 import ImageGallery from './ImageGallery.vue'
 import CheckpointSelector from './CheckpointSelector.vue'
@@ -10,7 +10,7 @@ import PromptInput from './PromptInput.vue'
 import { useGenerateSettings } from '../composables/useGenerateSettings'
 import { useImageGeneration } from '../composables/useImageGeneration'
 import { loadSettings, saveSettings, saveOptionalValues } from '../composables/useLocalSettings'
-import { useWeightAdjust } from '../composables/useWeightAdjust'
+// import { useWeightAdjust } from '../composables/useWeightAdjust'
 import { uploadImage, uploadImageWithOptions, uploadMask } from '../services/backendApi'
 import type { ComfyOriginalRef } from '../types/api'
 
@@ -23,11 +23,11 @@ const imageOriginalRefMap = ref<Record<string, ComfyOriginalRef | null>>({})
 const maskOverlayDataUrl = ref('')
 const isMaskEditorOpen = ref(false)
 const activeImageInputId = ref('')
-const positiveInputRef = ref<InstanceType<typeof PromptInput> | null>(null)
-const negativeInputRef = ref<InstanceType<typeof PromptInput> | null>(null)
-const positiveTextareaRef = computed<HTMLTextAreaElement | null>(
-  () => positiveInputRef.value?.textareaRef ?? null
-)
+// const positiveInputRef = ref<InstanceType<typeof PromptInput> | null>(null)
+// const negativeInputRef = ref<InstanceType<typeof PromptInput> | null>(null)
+// const positiveTextareaRef = computed<HTMLTextAreaElement | null>(
+//   () => positiveInputRef.value?.textareaRef ?? null
+// )
 
 // --- 設定管理 composable ---
 const settings = useGenerateSettings()
@@ -88,7 +88,7 @@ function closeGallery(): void {
 }
 
 // --- ウェイト調整（キーボードショートカット用） ---
-const { setWeight } = useWeightAdjust(positive, positiveTextareaRef)
+// const { setWeight } = useWeightAdjust(positive, positiveTextareaRef)
 
 // --- キーボードショートカット ---
 /**
@@ -103,17 +103,22 @@ function handleKeyDown(event: KeyboardEvent): void {
   // ギャラリー表示中はギャラリー側のハンドラに任せる
   if (showGallery.value) return
 
-  if (event.key === 'Enter') {
+  if (event.shiftKey && event.key === 'Enter') {
+    event.preventDefault()
+    if (!loading.value && !isGenerating.value && workflowData.value && workflowConfig.value) {
+      void generateOnce()
+    }
+  } else if (event.key === 'Enter') {
     event.preventDefault()
     if (!loading.value && !isGenerating.value && workflowData.value && workflowConfig.value) {
       void generateImages()
     }
-  } else if (event.key === 'ArrowUp') {
-    event.preventDefault()
-    void setWeight(0.1)
-  } else if (event.key === 'ArrowDown') {
-    event.preventDefault()
-    void setWeight(-0.1)
+  // } else if (event.key === 'ArrowUp') {
+  //   event.preventDefault()
+  //   void setWeight(0.1)
+  // } else if (event.key === 'ArrowDown') {
+  //   event.preventDefault()
+  //   void setWeight(-0.1)
   } else if (event.key === 'g') {
     event.preventDefault()
     if (previewImages.value.length > 0) {
@@ -517,7 +522,7 @@ function startAutoSave(): void {
             </div>
           </div>
 
-          <WeightButtons v-model="positive" :target-element="positiveTextareaRef" />
+          <!-- <WeightButtons v-model="positive" :target-element="positiveTextareaRef" /> -->
         </div>
 
         <div class="flex gap-4 mb-4">
