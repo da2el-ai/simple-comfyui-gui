@@ -488,7 +488,7 @@ function startAutoSave(): void {
 
 <template>
   <section id="generate-settings">
-    <div class="w-full mb-4">
+    <div class="workflow-select-wrapper w-full mb-4">
       <label class="block text-sm font-medium mb-1">Workflow</label>
       <select v-model="currentWorkflow" class="w-full p-2 border rounded-md" @change="handleWorkflowChange">
         <option v-for="wf in workflowList" :key="wf" :value="wf">{{ wf }}</option>
@@ -500,7 +500,7 @@ function startAutoSave(): void {
 
     <!-- <p v-if="currentWorkflow" class="text-sm text-gray-400 -mt-3 mb-4">Workflow: {{ currentWorkflow }}</p> -->
 
-    <div class="main-settings">
+    <!-- <div class="main-settings"> -->
       
       <div>
         <div class="mb-4">
@@ -548,14 +548,14 @@ function startAutoSave(): void {
       <!-- プレビュー -->
       <ImagePreview :images="previewImages" @open="openGallery" @clear="clearPreview" class="mb-4" />
 
-    </div>
+    <!-- </div> -->
     <!-- /.main-settings -->
 
     <!-- ギャラリーモーダル -->
     <ImageGallery v-if="showGallery" :images="previewImages" :initial-index="selectedImageIndex"
       @close="closeGallery" />
 
-    <details class="mb-6">
+    <details class="advanced-settings mb-6">
       <summary>Advanced Settings</summary>
 
       <div class="flex gap-4 mb-6 wrap" style="padding-top:1rem">

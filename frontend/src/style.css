@@ -40,17 +40,31 @@ img{
   padding: 24px;
 }
 
-.main-settings{
+#generate-settings{
   display: grid;
-  grid-template-columns: 1fr 40%;
   column-gap: 2rem;  
   row-gap: 1rem;  
+
+  @media (min-width: 940px) {
+    grid-template-columns: 1fr 40%;
+  }
 }
 
-@media (max-width: 940px) {
-  .main-settings {
-    grid-template-columns: 1fr;
+.workflow-select-wrapper{
+  @media (min-width: 940px) {
+    grid-column: 1 / span 2;
   }
+}
+
+.preview-container{
+  @media (min-width: 940px) {
+    grid-column: 2;
+    grid-row: span 2;
+  }
+}
+
+.advanced-settings{
+  grid-column: 1;
 }
 
 .mx-auto {
