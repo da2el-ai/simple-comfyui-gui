@@ -13,11 +13,11 @@ required:
       search_type: "title"
       search_value: "Negative"
       input_name: "prompt"
-  - id: "checkpoint"
-    workflow:
-      search_type: "class_type"
-      search_value: "D2 Checkpoint Loader"
-      input_name: "ckpt_name"
+  # - id: "checkpoint"
+  #   workflow:
+  #     search_type: "class_type"
+  #     search_value: "D2 Load Diffusion Model"
+  #     input_name: "ckpt_name"
   - id: "seed"
     workflow:
       search_type: "class_type"
@@ -26,46 +26,15 @@ required:
 
 # 追加ノード
 optional:
-  - id: "switch_controlnet"
+  - id: "checkpoint"
     input:
-      title: "Switch Controlnet"
-      type: "switch"
-      default: false
-    switch:
-      workflow:
-        targets:
-          - "24"
-          - "25"
-          - "26"
-          - ["14", "inputs", "cnet_stack"]
-      items:
-        - id: "load_image"
-          input:
-            title: "Load Image"
-            type: "image"
-            value: ""
-          workflow:
-            search_type: "class_type"
-            search_value: "D2 Load Image"
-            input_name: "image_path"
-        - id: "controlnet_name"
-          input:
-            title: "Controlenet Name"
-            type: "list"
-            value: ["D2 Controlnet Loader", "input", "required", "controlnet_name", 0]
-          workflow:
-            search_type: "class_type"
-            search_value: "D2 Controlnet Loader"
-            input_name: "controlnet_name"
-        - id: "controlnet_weight"
-          input:
-            title: "Controlnet Weight"
-            type: "number"
-            default: 0.5
-          workflow:
-            search_type: "title"
-            search_value: "Weight"
-            input_name: "value"
+      title: "Diffusion Model"
+      type: "list"
+      value: ["D2 Load Diffusion Model", "input", "required", "unet_name", 0]
+    workflow:
+      search_type: "class_type"
+      search_value: "D2 Load Diffusion Model"
+      input_name: "unet_name"
   - id: "size_preset"
     input:
       title: "Image Size Preset"

@@ -64,7 +64,7 @@ optional:
     id: "positive_quality"
     input:
       title: "Positive Quality"
-      type: "textarea"
+      type: "prompt"
       default: "wagashi \\(dagashiya\\), shacho_\\(ko_no_ha\\), (shirabi:0.2), year 2024, (very aesthetic, amazing quality, absurdres:1.4)"
     workflow:
       search_type: "title"
@@ -74,7 +74,7 @@ optional:
     id: "negative_quality"
     input:
       title: "Negative Quality"
-      type: "textarea"
+      type: "prompt"
       default: "Negative prompt:looking back, multiple_views, (plump, curvy, chubby:2), huge ass, ribs, thick thighs, wide hip,  flat color, blurry, lowres, error, film grain, scan artifacts, worst quality, bad quality, jpeg artifacts, very displeasing, chromatic aberration, logo, dated, signature, multiple views, gigantic breasts, artistic error, dithering, halftone, screentone"
     workflow:
       search_type: "title"
