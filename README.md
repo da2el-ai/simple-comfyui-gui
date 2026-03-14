@@ -138,9 +138,11 @@ QRコードの下、「オートコンプリートタグファイルを作成」
 | キー | 動作 |
 |---|---|
 | `Ctrl` + `Enter` | 生成開始（Generate ボタンと同等） |
+| `Ctrl` + `Shift` + `Enter` | 1枚だけ生成開始（Generate Once ボタンと同等） |
 | `Ctrl` + `↑` | カーソル位置の語のウェイトを +0.1 |
 | `Ctrl` + `↓` | カーソル位置の語のウェイトを -0.1 |
 | `Ctrl` + `G` | ギャラリーを開く（プレビュー画像がある場合） |
+| `↑` / `↓` | プロンプト候補の選択（プロンプト候補が表示している時） |
 
 ### ギャラリー
 
@@ -164,6 +166,12 @@ QRコードの下、「オートコンプリートタグファイルを作成」
   - img2imgとインペイントを行うワークフローです。
   - 拙作[D2 Nodes](https://github.com/da2el-ai/d2-nodes-comfyui)のインストールが必要です。
   - 画像の保存先を[Eagle](https://jp.eagle.cool/)にしています。
+
+### 追加のワークフロー
+
+[Release](https://github.com/da2el-ai/simple-comfyui-gui/releases/) で追加のワークフローを配布しています。
+
+詳細は [extra_workflow の README](./extra_workflow/README.md) をご覧下さい。
 
 
 ## ワークフローのカスタマイズ
@@ -327,6 +335,7 @@ optional:
 - `input`: 画面に表示する項目の設定
   - `title`: 表示名
   - `type`: 入力項目のタイプ
+    - `prompt`: ツールバー付きプロンプト入力
     - `text`: 文字列
     - `textarea`: 複数行テキスト
     - `number`: 数値
