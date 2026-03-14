@@ -177,7 +177,15 @@ function updateWordWeight(
     return { text: enclosingResult.text, lengthDiff: enclosingResult.lengthDiff }
   }
 
-  const words = text.split(',')
+  // カーソルのある行の範囲を特定し、その行内だけで処理する
+  const lineStart = text.lastIndexOf('\n', cursorPos - 1) + 1
+  const lineEndIdx = text.indexOf('\n', cursorPos)
+  const lineEnd = lineEndIdx === -1 ? text.length : lineEndIdx
+
+  const line = text.slice(lineStart, lineEnd)
+  const cursorInLine = cursorPos - lineStart
+
+  const words = line.split(',')
   let currentPos = 0
   let lengthDiff = 0
 
@@ -185,12 +193,12 @@ function updateWordWeight(
     const wordLength = words[i].length
     const segmentLength = i < words.length - 1 ? wordLength + 1 : wordLength
 
-    if (cursorPos >= currentPos && cursorPos <= currentPos + segmentLength) {
-      const word = words[i].trim()
+    if (cursorInLine >= currentPos && cursorInLine <= currentPos + segmentLength) {
+      const { leading, core, trailing } = splitTrimEdges(words[i])
       const originalLength = words[i].length
-      words[i] = adjustWeightText(word, weightChange)
+      words[i] = `${leading}${adjustWeightText(core, weightChange)}${trailing}`
 
-      if (cursorPos > currentPos) {
+      if (cursorInLine > currentPos) {
         lengthDiff = words[i].length - originalLength
       }
       break
@@ -199,7 +207,11 @@ function updateWordWeight(
     currentPos += segmentLength
   }
 
-  return { text: words.join(','), lengthDiff }
+  const newLine = words.join(',')
+  return {
+    text: text.slice(0, lineStart) + newLine + text.slice(lineEnd),
+    lengthDiff
+  }
 }
 
 /**
