@@ -115,13 +115,14 @@ function insertPrompt(prompt: string) {
   const before = ta.value.slice(0, start)
   const after = ta.value.slice(end)
   const sep = before.length > 0 && !before.match(/[,\s]$/) ? ', ' : ''
-  const newVal = before + sep + prompt + after
+  const cleanPrompt = prompt.replace(/[, ]+$/, '')
+  const newVal = before + sep + cleanPrompt + ', ' + after
 
   emit('update:modelValue', newVal)
   emit('applied')
 
   requestAnimationFrame(() => {
-    const cursor = start + sep.length + prompt.length
+    const cursor = start + sep.length + cleanPrompt.length + 2
     ta.setSelectionRange(cursor, cursor)
     ta.focus()
   })
