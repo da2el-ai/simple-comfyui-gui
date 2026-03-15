@@ -155,7 +155,10 @@
   },
   "19": {
     "inputs": {
-      "string_a": "best quality",
+      "string_a": [
+        "21",
+        0
+      ],
       "string_b": [
         "16",
         0
@@ -164,7 +167,7 @@
     },
     "class_type": "StringConcatenate",
     "_meta": {
-      "title": "Positive Quality"
+      "title": "Positive Concat"
     }
   },
   "20": {
@@ -173,10 +176,37 @@
         "17",
         0
       ],
-      "string_b": "worst quality",
+      "string_b": [
+        "22",
+        0
+      ],
       "delimiter": ","
     },
     "class_type": "StringConcatenate",
+    "_meta": {
+      "title": "Negative Concat"
+    }
+  },
+  "21": {
+    "inputs": {
+      "prompt": "best quality",
+      "comment_type": "# + // + /**/",
+      "insert_lora": "CHOOSE",
+      "token_count": false
+    },
+    "class_type": "D2 Prompt",
+    "_meta": {
+      "title": "Positive Quality"
+    }
+  },
+  "22": {
+    "inputs": {
+      "prompt": "worst quality",
+      "comment_type": "# + // + /**/",
+      "insert_lora": "CHOOSE",
+      "token_count": false
+    },
+    "class_type": "D2 Prompt",
     "_meta": {
       "title": "Negative Quality"
     }

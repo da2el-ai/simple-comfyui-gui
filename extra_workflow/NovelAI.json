@@ -90,7 +90,10 @@
   },
   "19": {
     "inputs": {
-      "string_a": "best quality",
+      "string_a": [
+        "27",
+        0
+      ],
       "string_b": [
         "16",
         0
@@ -99,7 +102,7 @@
     },
     "class_type": "StringConcatenate",
     "_meta": {
-      "title": "Positive Quality"
+      "title": "Positive Concat"
     }
   },
   "20": {
@@ -108,12 +111,15 @@
         "17",
         0
       ],
-      "string_b": "worst quality",
+      "string_b": [
+        "28",
+        0
+      ],
       "delimiter": ","
     },
     "class_type": "StringConcatenate",
     "_meta": {
-      "title": "Negative Quality"
+      "title": "Negative Concat"
     }
   },
   "21": {
@@ -171,7 +177,7 @@
       "weight_per_brace": 0.05,
       "syntax_mode": "numeric",
       "text": [
-        "20",
+        "26",
         0
       ]
     },
@@ -192,6 +198,44 @@
     "class_type": "DPRandomGenerator",
     "_meta": {
       "title": "Random Prompts"
+    }
+  },
+  "26": {
+    "inputs": {
+      "text": [
+        "20",
+        0
+      ],
+      "seed": 0,
+      "autorefresh": "No"
+    },
+    "class_type": "DPRandomGenerator",
+    "_meta": {
+      "title": "Random Prompts"
+    }
+  },
+  "27": {
+    "inputs": {
+      "prompt": "best quality",
+      "comment_type": "# + // + /**/",
+      "insert_lora": "CHOOSE",
+      "token_count": false
+    },
+    "class_type": "D2 Prompt",
+    "_meta": {
+      "title": "Positive Quality"
+    }
+  },
+  "28": {
+    "inputs": {
+      "prompt": "worst quality",
+      "comment_type": "# + // + /**/",
+      "insert_lora": "CHOOSE",
+      "token_count": false
+    },
+    "class_type": "D2 Prompt",
+    "_meta": {
+      "title": "Negative Quality"
     }
   }
 }
