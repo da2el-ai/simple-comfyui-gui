@@ -42,12 +42,16 @@ img{
 
 #generate-settings{
   display: grid;
-  column-gap: 2rem;  
-  row-gap: 1rem;  
+  column-gap: 2rem;
+  row-gap: 1rem;
 
   @media (min-width: 940px) {
     grid-template-columns: 1fr 40%;
   }
+}
+
+#generate-settings > * {
+  min-width: 0;
 }
 
 .workflow-select-wrapper{
