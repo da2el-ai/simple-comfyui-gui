@@ -28,7 +28,8 @@ const dialogRef = ref<HTMLDialogElement | null>(null)
 const imageRef = ref<HTMLImageElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 
-const brushSizes = [20, 40, 80, 120]
+const BRUSH_SIZE_MIN = 20
+const BRUSH_SIZE_MAX = 120
 const maskColors: MaskColor[] = ['#000000', '#ffffff', '#ff0000']
 const MASK_EDITOR_SETTINGS_KEY = 'mask-editor-settings'
 
@@ -49,34 +50,18 @@ function loadSettings(): MaskEditorSettings | null {
   try {
     const parsed = JSON.parse(raw) as Partial<MaskEditorSettings>
     const isBrushSize = (value: unknown): value is number =>
-      typeof value === 'number' && brushSizes.some((size) => size === value)
+      typeof value === 'number' && value >= BRUSH_SIZE_MIN && value <= BRUSH_SIZE_MAX
     const isMaskColor = (value: unknown): value is MaskColor =>
       typeof value === 'string' && maskColors.some((nextColor) => nextColor === value)
 
-    const isValidBrush = isBrushSize(parsed.brushSize)
-    const isValidEraser = isBrushSize(parsed.eraserSize)
-    const isValidColor = isMaskColor(parsed.color)
-
-    if (!isValidBrush || !isValidEraser || !isValidColor) {
-      return null
-    }
-
-    const restoredBrushSize = parsed.brushSize
-    const restoredEraserSize = parsed.eraserSize
-    const restoredColor = parsed.color
-
-    if (
-      typeof restoredBrushSize !== 'number' ||
-      typeof restoredEraserSize !== 'number' ||
-      !isMaskColor(restoredColor)
-    ) {
+    if (!isBrushSize(parsed.brushSize) || !isBrushSize(parsed.eraserSize) || !isMaskColor(parsed.color)) {
       return null
     }
 
     return {
-      brushSize: restoredBrushSize,
-      eraserSize: restoredEraserSize,
-      color: restoredColor
+      brushSize: parsed.brushSize,
+      eraserSize: parsed.eraserSize,
+      color: parsed.color
     }
   } catch {
     return null
@@ -96,12 +81,13 @@ const initialSettings = loadSettings()
 
 const imageUrl = ref('')
 const toolMode = ref<ToolMode>('brush')
-const brushSize = ref(initialSettings?.brushSize ?? brushSizes[0])
-const eraserSize = ref(initialSettings?.eraserSize ?? brushSizes[0])
+const brushSize = ref(initialSettings?.brushSize ?? BRUSH_SIZE_MIN)
+const eraserSize = ref(initialSettings?.eraserSize ?? BRUSH_SIZE_MIN)
 const color = ref<MaskColor>(initialSettings?.color ?? maskColors[0])
 const isDrawing = ref(false)
 let previousX = 0
 let previousY = 0
+let savedToolMode: ToolMode | null = null
 // const selectedSize = computed(() => (toolMode.value === 'brush' ? brushSize.value : eraserSize.value))
 
 const cursorX = ref(0)
@@ -173,25 +159,6 @@ function onDialogCancel(event: Event): void {
   closeDialog()
 }
 
-/**
- * ブラシモードへ切り替え、ブラシサイズを設定する。
- * @param size 設定するブラシサイズ。
- * @returns なし。
- */
-function setBrush(size: number): void {
-  toolMode.value = 'brush'
-  brushSize.value = size
-}
-
-/**
- * 消しゴムモードへ切り替え、消しゴムサイズを設定する。
- * @param size 設定する消しゴムサイズ。
- * @returns なし。
- */
-function setEraser(size: number): void {
-  toolMode.value = 'eraser'
-  eraserSize.value = size
-}
 
 /**
  * マスク描画色を変更する。
@@ -265,6 +232,11 @@ function startDrawing(event: PointerEvent): void {
   const point = getCanvasPoint(event)
   if (!point) return
 
+  if (event.button === 2) {
+    savedToolMode = toolMode.value
+    toolMode.value = 'eraser'
+  }
+
   isDrawing.value = true
   previousX = point.x
   previousY = point.y
@@ -292,6 +264,10 @@ function draw(event: PointerEvent): void {
  * @returns なし。
  */
 function stopDrawing(): void {
+  if (savedToolMode !== null) {
+    toolMode.value = savedToolMode
+    savedToolMode = null
+  }
   isDrawing.value = false
 }
 
@@ -482,31 +458,39 @@ function createBinaryMaskBlob(sourceCanvas: HTMLCanvasElement): Promise<Blob> {
 
     <div class="controls">
       <div class="control-group">
-        <span>Brush</span>
         <button
-          v-for="size in brushSizes"
-          :key="`brush-${size}`"
           type="button"
-          :class="{ 'active-shadow': toolMode === 'brush' && brushSize === size }"
-          class="btn btn-small border rounded-md"
-          @click="setBrush(size)"
-        >
-          {{ size }}px
-        </button>
+          class="btn btn-small border rounded-md mode-btn"
+          :class="{ 'active-shadow': toolMode === 'brush' }"
+          @click="toolMode = 'brush'"
+        >Brush</button>
+        <input
+          type="range"
+          :min="BRUSH_SIZE_MIN"
+          :max="BRUSH_SIZE_MAX"
+          v-model.number="brushSize"
+          class="size-slider"
+          @input="toolMode = 'brush'"
+        />
+        <span class="size-value">{{ brushSize }}px</span>
       </div>
 
       <div class="control-group">
-        <span>Eraser</span>
         <button
-          v-for="size in brushSizes"
-          :key="`eraser-${size}`"
           type="button"
-          :class="{ 'active-shadow': toolMode === 'eraser' && eraserSize === size }"
-          class="btn btn-small border rounded-md"
-          @click="setEraser(size)"
-        >
-          {{ size }}px
-        </button>
+          class="btn btn-small border rounded-md mode-btn"
+          :class="{ 'active-shadow': toolMode === 'eraser' }"
+          @click="toolMode = 'eraser'"
+        >Eraser</button>
+        <input
+          type="range"
+          :min="BRUSH_SIZE_MIN"
+          :max="BRUSH_SIZE_MAX"
+          v-model.number="eraserSize"
+          class="size-slider"
+          @input="toolMode = 'eraser'"
+        />
+        <span class="size-value">{{ eraserSize }}px</span>
       </div>
 
       <div class="control-group">
@@ -533,6 +517,7 @@ function createBinaryMaskBlob(sourceCanvas: HTMLCanvasElement): Promise<Blob> {
         @pointerup="stopDrawing"
         @pointerenter="showCursor"
         @pointerleave="onPointerLeave"
+        @contextmenu.prevent
       ></canvas>
       <div
         v-if="isCursorVisible"
@@ -576,7 +561,21 @@ function createBinaryMaskBlob(sourceCanvas: HTMLCanvasElement): Promise<Blob> {
 
 .control-group > span {
   font-size: 0.875rem;
-  min-width: 70px;
+}
+
+.mode-btn {
+  min-width: 60px;
+}
+
+.size-slider {
+  width: 120px;
+  cursor: pointer;
+}
+
+.size-value {
+  font-size: 0.875rem;
+  min-width: 42px;
+  text-align: right;
 }
 
 
