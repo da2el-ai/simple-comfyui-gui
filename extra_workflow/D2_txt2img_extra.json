@@ -62,7 +62,7 @@
       "steps": 20,
       "cfg": 5,
       "sampler_name": "euler_ancestral",
-      "scheduler": "simple",
+      "scheduler": "normal",
       "denoise": 1,
       "preview_method": "auto",
       "positive": "",
