@@ -9,7 +9,7 @@
 <table>
   <tr>
     <td>
-    <figure><img src="./img/top_2.png">
+    <figure><img src="./img/top_3.png">
     <figcaption>▲生成画面</figcaption></figure>
     </td>
     <td>
@@ -19,17 +19,17 @@
   </tr>
   <tr>
     <td>
-    <figure><img src="./img/tag-complete.png">
+    <figure><img src="./img/tag-complete_2.png">
     <figcaption>▲オートコンプリート</figcaption></figure>
     </td>
     <td>
-    <figure><img src="./img/prompt-selector.png">
+    <figure><img src="./img/prompt-selector_2.png">
     <figcaption>▲プロンプトセレクター</figcaption></figure>
     </td>
   </tr>
   <tr>
     <td colspan="2">
-    <figure><img src="./img/top_pc.png">
+    <figure><img src="./img/top_pc_2.png">
     <figcaption>▲PC版サイズ</figcaption></figure>
     </td>
   </tr>
@@ -80,6 +80,21 @@ ComfyUIの起動オプションに下記を付けて起動してください。
 VPNが必要です。個人的には Tailscale が簡単でおすすめです。
 
 <a href="https://tailscale.com/">https://tailscale.com/</a>
+
+## 最初にやること
+
+1. `Workflow` から `Simple_txt2img` を選択
+2. `Advanced Settings` を開く
+3. `Checkpoint` から好きなモデルを選択する
+4. `Negative Prompt` にネガティブプロンプトを記述
+5. `Positive Prompt` にポジティブプロンプトを記述
+6. `Generate` クリックで生成
+
+<img src="./img/1st_01.png">
+
+`Simple_txt2img` は標準ノードだけで構成されているので、最初に動作確認するにはおすすめです。
+
+[D2 Nodes](https://github.com/da2el-ai/d2-nodes-comfyui) がインストール済みで、画像管理に [Eagle](https://jp.eagle.cool/) を使っている方は `D2_txt2img` がオススメです。
 
 
 ## よくあるトラブル
