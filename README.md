@@ -112,6 +112,27 @@ VPNが必要です。個人的には Tailscale が簡単でおすすめです。
 - ワークフロー設定YAMLの `required` / `optional` の対応先が実ワークフローと一致しているか確認してください
 
 
+## プロンプトツールバー
+
+プロンプト入力エリアの下にはツールバーがあります。
+
+<img src="./img/lora.png">
+
+1. Undo, Redo
+2. Wait増減
+3. LoRA挿入
+4. Prompt Selector
+5. Text Area拡大・縮小
+
+### LoRA挿入について
+
+A1111方式でLoRAのプロンプトを挿入します。
+
+<span style="color:#c00">**※注意**</span><br>
+ワークフロー `simple_txt2img` では使えません。<br>
+D2 KSampler を採用している `D2_txt2img` を使う必要があります。
+
+
 ## プロンプトオートコンプリート
 
 プロンプトの補間機能を使うには `{インストールフォルダ}/tags/autocomplete.csv` を用意する必要があります。
