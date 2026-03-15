@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
 type ToolMode = 'brush' | 'eraser'
 type MaskColor = '#000000' | '#ffffff' | '#ff0000'
@@ -103,6 +103,16 @@ const isDrawing = ref(false)
 let previousX = 0
 let previousY = 0
 // const selectedSize = computed(() => (toolMode.value === 'brush' ? brushSize.value : eraserSize.value))
+
+const cursorX = ref(0)
+const cursorY = ref(0)
+const isCursorVisible = ref(false)
+const canvasScaleX = ref(1)
+
+const cursorDisplaySize = computed(() => {
+  const size = toolMode.value === 'eraser' ? eraserSize.value : brushSize.value
+  return size * canvasScaleX.value
+})
 
 watch([brushSize, eraserSize, color], ([nextBrushSize, nextEraserSize, nextColor]) => {
   saveSettings({
@@ -267,6 +277,7 @@ function startDrawing(event: PointerEvent): void {
  * @returns なし。
  */
 function draw(event: PointerEvent): void {
+  updateCursor(event)
   if (!isDrawing.value) return
   const point = getCanvasPoint(event)
   if (!point) return
@@ -281,6 +292,39 @@ function draw(event: PointerEvent): void {
  * @returns なし。
  */
 function stopDrawing(): void {
+  isDrawing.value = false
+}
+
+/**
+ * カーソル位置とキャンバススケールを更新する。
+ * @param event pointerイベント。
+ * @returns なし。
+ */
+function updateCursor(event: PointerEvent): void {
+  const canvas = canvasRef.value
+  if (!canvas) return
+  const rect = canvas.getBoundingClientRect()
+  cursorX.value = event.clientX - rect.left
+  cursorY.value = event.clientY - rect.top
+  if (canvas.width > 0) {
+    canvasScaleX.value = rect.width / canvas.width
+  }
+}
+
+/**
+ * カーソルを表示する。
+ * @returns なし。
+ */
+function showCursor(): void {
+  isCursorVisible.value = true
+}
+
+/**
+ * カーソルを非表示にして描画を終了する。
+ * @returns なし。
+ */
+function onPointerLeave(): void {
+  isCursorVisible.value = false
   isDrawing.value = false
 }
 
@@ -483,12 +527,23 @@ function createBinaryMaskBlob(sourceCanvas: HTMLCanvasElement): Promise<Blob> {
       <canvas
         ref="canvasRef"
         class="mask-canvas"
-        :style="{ opacity: 0.5, cursor: toolMode === 'eraser' ? 'cell' : 'crosshair' }"
+        :style="{ opacity: 0.5, cursor: 'none' }"
         @pointerdown="startDrawing"
         @pointermove="draw"
         @pointerup="stopDrawing"
-        @pointerleave="stopDrawing"
+        @pointerenter="showCursor"
+        @pointerleave="onPointerLeave"
       ></canvas>
+      <div
+        v-if="isCursorVisible"
+        class="brush-cursor"
+        :style="{
+          left: cursorX + 'px',
+          top: cursorY + 'px',
+          width: cursorDisplaySize + 'px',
+          height: cursorDisplaySize + 'px',
+        }"
+      ></div>
     </div>
   </dialog>
 </template>
@@ -566,6 +621,22 @@ function createBinaryMaskBlob(sourceCanvas: HTMLCanvasElement): Promise<Blob> {
 .color-btn_red,
 .color-btn_red.active{
     background-color: #f5a7a7;
+}
+
+.brush-cursor {
+  position: absolute;
+  border: 2px solid white;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: difference;
+  box-sizing: border-box;
+}
+
+@media (hover: none) {
+  .brush-cursor {
+    display: none;
+  }
 }
 
 </style>
