@@ -31,6 +31,17 @@ required:
 # 追加ノード
 optional:
   -
+    id: "enable_inpaint"
+    input:
+      title: "Enable Inpaint"
+      type: "switch"
+      default: false
+    switch:
+      workflow:
+        targets:
+          - "47"
+          - ["53", "inputs", "any_01"]
+  -
     id: "load_image"
     input:
       title: "Load Image"
@@ -84,7 +95,7 @@ optional:
     id: "positive_quality"
     input:
       title: "Positive Quality"
-      type: "textarea"
+      type: "prompt"
       default: "masterpiece, best quality, absurdres, newest"
     workflow:
       search_type: "title"
@@ -94,7 +105,7 @@ optional:
     id: "negative_quality"
     input:
       title: "Negative Quality"
-      type: "textarea"
+      type: "prompt"
       default: "bad quality, worst quality, worst detail, sketch, censor, text, speech_bubble, watermark"
     workflow:
       search_type: "title"

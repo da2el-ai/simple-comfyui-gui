@@ -80,7 +80,7 @@
         2
       ],
       "latent_image": [
-        "47",
+        "53",
         0
       ],
       "d2_pipe": [
@@ -219,6 +219,22 @@
     "class_type": "D2 Load Image",
     "_meta": {
       "title": "D2 Load Image"
+    }
+  },
+  "53": {
+    "inputs": {
+      "any_01": [
+        "47",
+        0
+      ],
+      "any_02": [
+        "24",
+        4
+      ]
+    },
+    "class_type": "Any Switch (rgthree)",
+    "_meta": {
+      "title": "Any Switch (rgthree)"
     }
   }
 }
