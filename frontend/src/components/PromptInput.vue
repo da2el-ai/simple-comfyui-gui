@@ -163,7 +163,13 @@ function handleKeyDown(event: KeyboardEvent): void {
   const isCtrl = event.ctrlKey || event.metaKey
   if (!isCtrl) return
 
-  if (event.key === 'ArrowUp') {
+  if (event.key === 'z' && !event.shiftKey) {
+    event.preventDefault()
+    undo()
+  } else if (event.key === 'y' || (event.key === 'z' && event.shiftKey)) {
+    event.preventDefault()
+    redo()
+  } else if (event.key === 'ArrowUp') {
     event.preventDefault()
     void setWeight(0.1)
   } else if (event.key === 'ArrowDown') {
