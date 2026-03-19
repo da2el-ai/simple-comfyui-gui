@@ -65,11 +65,11 @@ optional:
     input:
       title: "Positive Quality"
       type: "prompt"
-      default: "wagashi \\(dagashiya\\), shacho_\\(ko_no_ha\\), (shirabi:0.2), year 2024, (very aesthetic, amazing quality, absurdres:1.4)"
+      default: ""
     workflow:
       search_type: "title"
       search_value: "Positive Quality"
-      input_name: "string_a"
+      input_name: "prompt"
   -
     id: "negative_quality"
     input:
@@ -79,7 +79,7 @@ optional:
     workflow:
       search_type: "title"
       search_value: "Negative Quality"
-      input_name: "string_b"
+      input_name: "prompt"
   -
     id: "image_format"
     input:
