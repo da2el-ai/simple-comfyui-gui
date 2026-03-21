@@ -28,7 +28,7 @@
     "inputs": {
       "preset": "custom",
       "width": 1024,
-      "height": 1024,
+      "height": 1871,
       "swap_dimensions": false,
       "upscale_factor": 1,
       "prescale_factor": 1,
@@ -42,7 +42,7 @@
   },
   "16": {
     "inputs": {
-      "prompt": "2girls,",
+      "prompt": "",
       "comment_type": "# + // + /**/",
       "insert_lora": "CHOOSE",
       "token_count": false
@@ -54,7 +54,7 @@
   },
   "17": {
     "inputs": {
-      "prompt": "long hair",
+      "prompt": "",
       "comment_type": "# + // + /**/",
       "insert_lora": "CHOOSE",
       "token_count": false
@@ -146,12 +146,16 @@
       "variety": false,
       "decrisper": false,
       "smea": "none",
-      "sampler": "k_euler_ancestral",
-      "scheduler": "native",
-      "seed": 8105475833,
+      "sampler": "k_dpmpp_2m",
+      "scheduler": "exponential",
+      "seed": 5232544783,
       "uncond_scale": 1,
       "cfg_rescale": 0,
-      "keep_alpha": true
+      "keep_alpha": true,
+      "option": [
+        "42",
+        0
+      ]
     },
     "class_type": "GenerateNAID",
     "_meta": {
@@ -192,7 +196,7 @@
         "19",
         0
       ],
-      "seed": 0,
+      "seed": 1432,
       "autorefresh": "No"
     },
     "class_type": "DPRandomGenerator",
@@ -206,7 +210,7 @@
         "20",
         0
       ],
-      "seed": 0,
+      "seed": 613,
       "autorefresh": "No"
     },
     "class_type": "DPRandomGenerator",
@@ -216,7 +220,7 @@
   },
   "27": {
     "inputs": {
-      "prompt": "best quality",
+      "prompt": "",
       "comment_type": "# + // + /**/",
       "insert_lora": "CHOOSE",
       "token_count": false
@@ -228,7 +232,7 @@
   },
   "28": {
     "inputs": {
-      "prompt": "worst quality",
+      "prompt": "",
       "comment_type": "# + // + /**/",
       "insert_lora": "CHOOSE",
       "token_count": false
@@ -236,6 +240,274 @@
     "class_type": "D2 Prompt",
     "_meta": {
       "title": "Negative Quality"
+    }
+  },
+  "29": {
+    "inputs": {
+      "style_aware": true,
+      "fidelity": 0.7,
+      "image": [
+        "37",
+        0
+      ]
+    },
+    "class_type": "CharacterReferenceOptionNAID",
+    "_meta": {
+      "title": "Character Reference ✒️🅝🅐🅘"
+    }
+  },
+  "30": {
+    "inputs": {
+      "image": "",
+      "Open Mask Editor": 0
+    },
+    "class_type": "D2 Load Image",
+    "_meta": {
+      "title": "D2 Load Image"
+    }
+  },
+  "34": {
+    "inputs": {
+      "char_caption": [
+        "43",
+        0
+      ],
+      "x": 0.5,
+      "y": 0.5
+    },
+    "class_type": "V4CharacterCaption",
+    "_meta": {
+      "title": "Character Caption 1"
+    }
+  },
+  "35": {
+    "inputs": {
+      "char_caption": [
+        "44",
+        0
+      ],
+      "x": 0.5,
+      "y": 0.5,
+      "option": [
+        "34",
+        0
+      ]
+    },
+    "class_type": "V4CharacterCaption",
+    "_meta": {
+      "title": "Character Caption 2"
+    }
+  },
+  "36": {
+    "inputs": {
+      "char_caption": [
+        "45",
+        0
+      ],
+      "x": 0.5,
+      "y": 0.5,
+      "option": [
+        "35",
+        0
+      ]
+    },
+    "class_type": "V4CharacterCaption",
+    "_meta": {
+      "title": "Character Caption 3"
+    }
+  },
+  "37": {
+    "inputs": {
+      "upscale_method": "area",
+      "largest_size": 1280,
+      "image": [
+        "30",
+        0
+      ]
+    },
+    "class_type": "ImageScaleToMaxDimension",
+    "_meta": {
+      "title": "ImageScaleToMaxDimension"
+    }
+  },
+  "38": {
+    "inputs": {
+      "image": "",
+      "Open Mask Editor": 0
+    },
+    "class_type": "D2 Load Image",
+    "_meta": {
+      "title": "D2 Load Image"
+    }
+  },
+  "39": {
+    "inputs": {
+      "upscale_method": "area",
+      "largest_size": 1280,
+      "image": [
+        "38",
+        0
+      ]
+    },
+    "class_type": "ImageScaleToMaxDimension",
+    "_meta": {
+      "title": "ImageScaleToMaxDimension"
+    }
+  },
+  "40": {
+    "inputs": {
+      "style_aware": true,
+      "fidelity": 0.8,
+      "image": [
+        "39",
+        0
+      ]
+    },
+    "class_type": "CharacterReferenceOptionNAID",
+    "_meta": {
+      "title": "Character Reference ✒️🅝🅐🅘"
+    }
+  },
+  "42": {
+    "inputs": {
+      "option1": [
+        "29",
+        0
+      ],
+      "option2": [
+        "40",
+        0
+      ],
+      "option3": [
+        "36",
+        0
+      ],
+      "option4": [
+        "48",
+        0
+      ],
+      "option5": [
+        "51",
+        0
+      ]
+    },
+    "class_type": "OptionConcatNAID",
+    "_meta": {
+      "title": "Option Concat ✒️🅝🅐🅘"
+    }
+  },
+  "43": {
+    "inputs": {
+      "prompt": "",
+      "comment_type": "# + // + /**/",
+      "insert_lora": "CHOOSE",
+      "token_count": false
+    },
+    "class_type": "D2 Prompt",
+    "_meta": {
+      "title": "Character Prompt 1"
+    }
+  },
+  "44": {
+    "inputs": {
+      "prompt": "",
+      "comment_type": "# + // + /**/",
+      "insert_lora": "CHOOSE",
+      "token_count": false
+    },
+    "class_type": "D2 Prompt",
+    "_meta": {
+      "title": "Character Prompt 2"
+    }
+  },
+  "45": {
+    "inputs": {
+      "prompt": "",
+      "comment_type": "# + // + /**/",
+      "insert_lora": "CHOOSE",
+      "token_count": false
+    },
+    "class_type": "D2 Prompt",
+    "_meta": {
+      "title": "Character Prompt 3"
+    }
+  },
+  "46": {
+    "inputs": {
+      "image": "",
+      "Open Mask Editor": 0
+    },
+    "class_type": "D2 Load Image",
+    "_meta": {
+      "title": "D2 Load Image"
+    }
+  },
+  "47": {
+    "inputs": {
+      "upscale_method": "area",
+      "largest_size": 1280,
+      "image": [
+        "46",
+        0
+      ]
+    },
+    "class_type": "ImageScaleToMaxDimension",
+    "_meta": {
+      "title": "ImageScaleToMaxDimension"
+    }
+  },
+  "48": {
+    "inputs": {
+      "information_extracted": 1,
+      "strength": 0.6,
+      "autosave_filename_prefix": "NAI_encodings/NAI_encoding",
+      "image": [
+        "47",
+        0
+      ]
+    },
+    "class_type": "VibeTransferOptionNAID",
+    "_meta": {
+      "title": "VibeTransferOption ✒️🅝🅐🅘"
+    }
+  },
+  "49": {
+    "inputs": {
+      "image": "",
+      "Open Mask Editor": 0
+    },
+    "class_type": "D2 Load Image",
+    "_meta": {
+      "title": "D2 Load Image"
+    }
+  },
+  "50": {
+    "inputs": {
+      "upscale_method": "area",
+      "largest_size": 1280,
+      "image": [
+        "49",
+        0
+      ]
+    },
+    "class_type": "ImageScaleToMaxDimension",
+    "_meta": {
+      "title": "ImageScaleToMaxDimension"
+    }
+  },
+  "51": {
+    "inputs": {
+      "information_extracted": 1,
+      "strength": 0.6,
+      "autosave_filename_prefix": "NAI_encodings/NAI_encoding",
+      "image": [
+        "50",
+        0
+      ]
+    },
+    "class_type": "VibeTransferOptionNAID",
+    "_meta": {
+      "title": "VibeTransferOption ✒️🅝🅐🅘"
     }
   }
 }

@@ -80,6 +80,242 @@ optional:
       search_type: "title"
       search_value: "Negative Quality"
       input_name: "prompt"
+  - id: "switch_character"
+    input:
+      title: "Enable Character Prompt"
+      type: "switch"
+      default: false
+    switch:
+      workflow:
+        targets: 
+          - "34"
+          - "35"
+          - "36"
+          - ["42", "inputs", "option3"]
+      items:
+        - id: "character_prompt_1"
+          input:
+            title: "Character Prompt 1"
+            type: "prompt"
+            default: ""
+          workflow:
+            search_type: "title"
+            search_value: "Character Prompt 1"
+            input_name: "prompt"
+        - id: "character_prompt_1_x"
+          input:
+            title: "Character Prompt 1 X"
+            type: "number"
+            default: 0.5
+          workflow:
+            search_type: "title"
+            search_value: "Character Caption 1"
+            input_name: "x"
+        - id: "character_prompt_1_y"
+          input:
+            title: "Character Prompt 1 Y"
+            type: "number"
+            default: 0.5
+          workflow:
+            search_type: "title"
+            search_value: "Character Caption 1"
+            input_name: "y"
+        - id: "character_prompt_2"
+          input:
+            title: "Character Prompt 2"
+            type: "prompt"
+            default: ""
+          workflow:
+            search_type: "title"
+            search_value: "Character Prompt 2"
+            input_name: "prompt"
+        - id: "character_prompt_2_x"
+          input:
+            title: "Character Prompt 2 X"
+            type: "number"
+            default: 0.5
+          workflow:
+            search_type: "title"
+            search_value: "Character Caption 2"
+            input_name: "x"
+        - id: "character_prompt_2_y"
+          input:
+            title: "Character Prompt 2 Y"
+            type: "number"
+            default: 0.5
+          workflow:
+            search_type: "title"
+            search_value: "Character Caption 2"
+            input_name: "y"
+        - id: "character_prompt_3"
+          input:
+            title: "Character Prompt 3"
+            type: "prompt"
+            default: ""
+          workflow:
+            search_type: "title"
+            search_value: "Character Prompt 3"
+            input_name: "prompt"
+        - id: "character_prompt_3_x"
+          input:
+            title: "Character Prompt 3 X"
+            type: "number"
+            default: 0.5
+          workflow:
+            search_type: "title"
+            search_value: "Character Caption 3"
+            input_name: "x"
+        - id: "character_prompt_3_y"
+          input:
+            title: "Character Prompt 3 Y"
+            type: "number"
+            default: 0.5
+          workflow:
+            search_type: "title"
+            search_value: "Character Caption 3"
+            input_name: "y"
+  - id: "switch_reference_1"
+    input:
+      title: "Enable Character Reference 1"
+      type: "switch"
+      default: false
+    switch:
+      workflow:
+        targets: 
+          - "30"
+          - "37"
+          - "29"
+          - ["42", "inputs", "option1"]
+      items:
+        - id: "character_reference_1_image"
+          input:
+            title: "Load Image"
+            type: "image"
+            value: ""
+          workflow:
+            search_type: "id"
+            search_value: 30
+            input_name: "image_path"
+        - id: "character_reference_1_weight"
+          input:
+            title: "Weight"
+            type: "number"
+            default: 0.7
+          workflow:
+            search_type: "id"
+            search_value: 29
+            input_name: "fidelity"
+  - id: "switch_reference_2"
+    input:
+      title: "Enable Character Reference 2"
+      type: "switch"
+      default: false
+    switch:
+      workflow:
+        targets: 
+          - "38"
+          - "39"
+          - "40"
+          - ["42", "inputs", "option2"]
+      items:
+        - id: "character_reference_2_image"
+          input:
+            title: "Load Image"
+            type: "image"
+            value: ""
+          workflow:
+            search_type: "id"
+            search_value: 38
+            input_name: "image_path"
+        - id: "character_reference_2_weight"
+          input:
+            title: "Weight"
+            type: "number"
+            default: 0.7
+          workflow:
+            search_type: "id"
+            search_value: 40
+            input_name: "fidelity"
+  - id: "switch_potion_1"
+    input:
+      title: "Enable Potion 1"
+      type: "switch"
+      default: false
+    switch:
+      workflow:
+        targets: 
+          - "46"
+          - "47"
+          - "48"
+          - ["42", "inputs", "option4"]
+      items:
+        - id: "potion_1_image"
+          input:
+            title: "Load Image"
+            type: "image"
+            value: ""
+          workflow:
+            search_type: "id"
+            search_value: 46
+            input_name: "image_path"
+        - id: "potion_1_strength"
+          input:
+            title: "Strength"
+            type: "number"
+            default: 0.7
+          workflow:
+            search_type: "id"
+            search_value: 48
+            input_name: "strength"
+        - id: "potion_1_information"
+          input:
+            title: "Information"
+            type: "number"
+            default: 0.7
+          workflow:
+            search_type: "id"
+            search_value: 48
+            input_name: "information_extracted"
+  - id: "switch_potion_2"
+    input:
+      title: "Enable Potion 2"
+      type: "switch"
+      default: false
+    switch:
+      workflow:
+        targets: 
+          - "49"
+          - "50"
+          - "51"
+          - ["42", "inputs", "option5"]
+      items:
+        - id: "potion_2_image"
+          input:
+            title: "Load Image"
+            type: "image"
+            value: ""
+          workflow:
+            search_type: "id"
+            search_value: 49
+            input_name: "image_path"
+        - id: "potion_2_strength"
+          input:
+            title: "Strength"
+            type: "number"
+            default: 0.7
+          workflow:
+            search_type: "id"
+            search_value: 51
+            input_name: "strength"
+        - id: "potion_2_information"
+          input:
+            title: "Information"
+            type: "number"
+            default: 0.7
+          workflow:
+            search_type: "id"
+            search_value: 51
+            input_name: "information_extracted"
   -
     id: "image_format"
     input:
