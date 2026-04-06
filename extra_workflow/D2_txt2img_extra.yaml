@@ -101,7 +101,7 @@ optional:
     workflow:
       search_type: "title"
       search_value: "Positive Quality"
-      input_name: "string_a"
+      input_name: "prompt"
   - id: "negative_quality"
     input:
       title: "Negative Quality"
@@ -110,7 +110,7 @@ optional:
     workflow:
       search_type: "title"
       search_value: "Negative Quality"
-      input_name: "string_b"
+      input_name: "prompt"
   - id: "image_format"
     input:
       title: "Image Format"
