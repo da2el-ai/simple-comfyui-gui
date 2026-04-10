@@ -54,13 +54,11 @@ function selectTag(tag: string): void {
     replaceStart -= 1
   }
 
-  let replaceEnd = cursor
-  while (replaceEnd < value.length && !isDelimiter(value.charAt(replaceEnd))) {
-    replaceEnd += 1
-  }
+  const isLineHead = replaceStart === 0 || value.charAt(replaceStart - 1) === '\n'
+  const prefix = isLineHead ? '' : ' '
 
-  const newTextBefore = value.substring(0, replaceStart) + tag + ', '
-  const newValue = newTextBefore + value.substring(replaceEnd)
+  const newTextBefore = value.substring(0, replaceStart) + prefix + tag + ', '
+  const newValue = newTextBefore + value.substring(cursor)
 
   modelValue.value = newValue
   filteredTags.value = []
