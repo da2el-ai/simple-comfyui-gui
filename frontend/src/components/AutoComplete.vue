@@ -47,7 +47,7 @@ function selectTag(tag: string): void {
   const textarea = props.targetElement
   const cursor = textarea.selectionStart
   const value = textarea.value
-  const isDelimiter = (char: string): boolean => char === ',' || char === '\n'
+  const isDelimiter = (char: string): boolean => char === ',' || char === '\n' || char === '{' || char === '}' || char === '|'
 
   let replaceStart = cursor
   while (replaceStart > 0 && !isDelimiter(value.charAt(replaceStart - 1))) {
