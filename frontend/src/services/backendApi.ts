@@ -64,9 +64,14 @@ export async function fetchWorkflowConfigText(workflowName: string): Promise<str
   throw new Error('workflow config取得に失敗しました: 設定ファイルが見つかりません')
 }
 
-/** ComfyUIの object_info を取得する */
-export async function fetchComfyObjectInfo(endpoint: string): Promise<ComfyObjectInfo> {
-  const response = await fetch(`${endpoint}/object_info`, { cache: 'no-store' })
+/**
+ * ComfyUIの object_info を取得する。
+ * ComfyUIへ直接ではなくバックエンド(/api/object_info)経由で取得する。
+ * バックエンドがgzip圧縮して返すため、低速回線（スマホ+Tailscale）での転送量を削減できる。
+ * gzipの解凍はブラウザが自動で行うので、ここでの解凍処理は不要。
+ */
+export async function fetchComfyObjectInfo(): Promise<ComfyObjectInfo> {
+  const response = await fetch('/api/object_info', { cache: 'no-store' })
   if (!response.ok) {
     throw new Error(`ComfyUI object_info取得に失敗しました: ${response.status}`)
   }

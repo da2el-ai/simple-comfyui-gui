@@ -46,7 +46,7 @@ export function useGenerateSettings() {
   async function initialize(saved?: PersistedSettings): Promise<void> {
     await run(async () => {
       endpoint.value = await fetchComfyUIEndpoint()
-      objectInfo.value = await fetchComfyObjectInfo(endpoint.value)
+      objectInfo.value = await fetchComfyObjectInfo()
       checkpointList.value = extractCheckpointList(objectInfo.value)
       loraList.value = extractLoraList(objectInfo.value)
 

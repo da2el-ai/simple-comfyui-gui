@@ -1,6 +1,7 @@
 package server
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"sort"
 	"strings"
 
+	"simple-comfyui-gui/app/internal/comfyui"
 	"simple-comfyui-gui/app/internal/config"
 )
 
@@ -44,6 +46,7 @@ func (staticServer *StaticServer) Start() error {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/comfyui_endpoint", staticServer.handleComfyUIEndpoint)
+	mux.HandleFunc("/api/object_info", staticServer.handleObjectInfo)
 	mux.HandleFunc("/api/workflows", staticServer.handleWorkflows)
 	mux.HandleFunc("/api/tags", staticServer.handleTags)
 	mux.HandleFunc("/api/selector/", staticServer.handleSelectorGet)
@@ -257,6 +260,40 @@ func (staticServer *StaticServer) handleComfyUIEndpoint(response http.ResponseWr
 	writeJSON(response, http.StatusOK, map[string]string{
 		"endpoint": loadedConfig.ComfyUIURL,
 	})
+}
+
+// handleObjectInfo はComfyUIの/object_infoをプロキシして返すAPIハンドラ。
+// ComfyUIから取得した約12MBのJSONを、クライアントがgzipを受け入れる場合はgzip圧縮して返す。
+// これによりTailscale等の低速回線越し（スマホ）での転送量を削減し、表示時間を短縮する。
+// 重い12MBの取得(ComfyUI→Go)はローカル接続で行い、回線を流れるのは圧縮済みデータのみとなる。
+// キャッシュは持たず、毎回ComfyUIから取得するため常に最新の内容を返す。
+func (staticServer *StaticServer) handleObjectInfo(response http.ResponseWriter, request *http.Request) {
+	loadedConfig, err := config.Load()
+	if err != nil {
+		loadedConfig = config.DefaultConfig()
+	}
+
+	body, err := comfyui.FetchObjectInfo(request.Context(), loadedConfig.ComfyUIURL)
+	if err != nil {
+		writeJSON(response, http.StatusBadGateway, map[string]string{
+			"error": "object_infoの取得に失敗しました",
+		})
+		return
+	}
+
+	response.Header().Set("Content-Type", "application/json")
+	response.Header().Set("Vary", "Accept-Encoding")
+
+	// クライアントがgzipを受け入れない場合は非圧縮のまま返す（フォールバック）
+	if !strings.Contains(request.Header.Get("Accept-Encoding"), "gzip") {
+		_, _ = response.Write(body)
+		return
+	}
+
+	response.Header().Set("Content-Encoding", "gzip")
+	gzipWriter := gzip.NewWriter(response)
+	defer gzipWriter.Close()
+	_, _ = gzipWriter.Write(body)
 }
 
 // ワークフローディレクトリ内の .json ファイルを走査し、
