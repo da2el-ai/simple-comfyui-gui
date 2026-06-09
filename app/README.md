@@ -18,57 +18,67 @@ make env-check
 
 ## 開発（Wails）
 
+- Wails の開発モードで起動します
+
+**mac OS:**
+
 ```bash
 cd app
 make wails-dev
 ```
+- `make wails-dev` は内部で `go run github.com/wailsapp/wails/v2/cmd/wails@v2.11.0 dev` を実行します
 
-Windows の場合は以下を実行してください（`make` 不要）。
+**Windows:** （`make` 不要）。
 
 ```powershell
 cd app
 powershell -ExecutionPolicy Bypass -File .\scripts\wails-dev.ps1
 ```
 
-- Wails の開発モードで起動します
-- `make wails-dev` は内部で `go run github.com/wailsapp/wails/v2/cmd/wails@v2.11.0 dev` を実行します
 
 ## 本番ビルド（現行運用）
 
+- ビルド時に `production` タグを付与します
+
+**mac OS:**
 ```bash
 cd app
 make build
 ```
+- 出力先: `../runtime/app`
 
-Windows の場合は以下を実行してください（`make` 不要）。
+**Windows:**（`make` 不要）。
 
 ```powershell
 cd app
 powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
 ```
+- 出力先: `../runtime/app.exe`
 
-- 出力先: `../runtime/app`（Windows は `../runtime/app.exe`）
-- ビルド時に `production` タグを付与します
 
 ## 配布向けビルド（推奨）
 
-配布用は `make wails-build` を使用してください。
+- `make build` は単体バイナリ生成用（ターミナル起動向け）です
+- 配布用途では Wails 標準の成果物（macOS なら `.app`）を使用します
+
+**mac OS:**
 
 ```bash
 cd app
 make wails-build
 ```
 
-Windows の場合は以下を実行してください（`make` 不要）。
+- 出力先: `runtime/Simple ComfyUI GUI.app`
+
+
+**Windows:** （`make` 不要）
 
 ```powershell
 cd app
 powershell -ExecutionPolicy Bypass -File .\scripts\wails-build.ps1
 ```
 
-- `make build` は単体バイナリ生成用（ターミナル起動向け）です
-- 配布用途では Wails 標準の成果物（macOS なら `.app`）を使用します
-- 出力先（macOS）: `runtime/*.app`
+- 出力先: `runtime/Simple ComfyUI GUI.exe`
 
 ### 起動方法（macOS）
 
