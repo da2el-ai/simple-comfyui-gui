@@ -118,6 +118,8 @@ func newFrontendHandler(frontendDir string) http.Handler {
 	})
 }
 
+// ワークフローファイル(.json/.yaml)を配信するハンドラを生成する。
+// 更新が即座に反映されるよう、キャッシュを無効化するヘッダーを常に付与する。
 func newWorkflowHandler(workflowDir string) http.Handler {
 	fileServer := http.StripPrefix("/workflow/", http.FileServer(http.Dir(workflowDir)))
 
@@ -129,6 +131,11 @@ func newWorkflowHandler(workflowDir string) http.Handler {
 	})
 }
 
+// 実行ファイルの位置を起点に、frontend / workflow ディレクトリと
+// タグファイルの配置場所を探索して返す。実行ファイルのある階層から最大8階層上まで遡り、
+// 各階層で直下 (frontend/workflow) と runtime 配下 (runtime/frontend, runtime/workflow) の
+// 両パターンを確認する。開発時とビルド後で配置が異なるケースに対応するための探索処理。
+// 見つからない場合は探索したパス一覧を含むエラーを返す。
 func resolveStaticDirs() (string, string, string, error) {
 	executablePath, err := os.Executable()
 	if err != nil {
@@ -162,6 +169,10 @@ func resolveStaticDirs() (string, string, string, error) {
 	return "", "", "", errors.New("frontend/workflow の配置が見つかりません。探索パス: " + strings.Join(checkedPaths, ", "))
 }
 
+// 指定階層を基準にオートコンプリート用タグCSVのパスを解決する。
+// 直下 (tags/autocomplete.csv) と runtime 配下 (runtime/tags/autocomplete.csv) を順に確認し、
+// 実ファイルがあればそのパスを返す。ファイルが無くてもディレクトリが存在すれば
+// 想定パスを返し、いずれも無ければ直下パスを既定値として返す。
 func resolveTagsFile(ancestorDir string) string {
 	directTagsFile := filepath.Join(ancestorDir, "tags", "autocomplete.csv")
 	if fileExists(directTagsFile) {
@@ -184,6 +195,9 @@ func resolveTagsFile(ancestorDir string) string {
 	return directTagsFile
 }
 
+// セレクター定義ファイルを格納するディレクトリを探索して返す。
+// resolveStaticDirs と同様に実行ファイルから最大8階層上まで遡り、直下 (selector) と
+// runtime 配下 (runtime/selector) を確認する。見つからない場合は空文字列を返す。
 func resolveSelectorDir() string {
 	executablePath, err := os.Executable()
 	if err != nil {
@@ -211,6 +225,7 @@ func resolveSelectorDir() string {
 	return ""
 }
 
+// 指定パスが存在し、かつディレクトリである場合に true を返す。
 func directoryExists(path string) bool {
 	stat, err := os.Stat(path)
 	if err != nil {
@@ -220,6 +235,7 @@ func directoryExists(path string) bool {
 	return stat.IsDir()
 }
 
+// 指定パスが存在し、かつディレクトリではない（通常ファイルである）場合に true を返す。
 func fileExists(path string) bool {
 	stat, err := os.Stat(path)
 	if err != nil {
@@ -229,6 +245,9 @@ func fileExists(path string) bool {
 	return !stat.IsDir()
 }
 
+// 設定済みの ComfyUI 接続先URLをJSONで返すAPIハンドラ。
+// フロントエンドが ComfyUI API へ直接アクセスするための接続先を取得するのに使う。
+// 設定の読み込みに失敗した場合は既定設定を用いる。
 func (staticServer *StaticServer) handleComfyUIEndpoint(response http.ResponseWriter, _ *http.Request) {
 	loadedConfig, err := config.Load()
 	if err != nil {
@@ -240,6 +259,9 @@ func (staticServer *StaticServer) handleComfyUIEndpoint(response http.ResponseWr
 	})
 }
 
+// ワークフローディレクトリ内の .json ファイルを走査し、
+// 拡張子を除いたワークフロー名の一覧をソートしてJSONで返すAPIハンドラ。
+// フロントエンドのワークフロー選択肢を構築するために使う。
 func (staticServer *StaticServer) handleWorkflows(response http.ResponseWriter, _ *http.Request) {
 	entries, err := os.ReadDir(staticServer.workflowDir)
 	if err != nil {
@@ -267,6 +289,8 @@ func (staticServer *StaticServer) handleWorkflows(response http.ResponseWriter, 
 	writeJSON(response, http.StatusOK, workflowNames)
 }
 
+// オートコンプリート用タグCSVファイルをそのまま配信するAPIハンドラ。
+// ファイルが未解決または存在しない場合は 404 をJSONで返す。
 func (staticServer *StaticServer) handleTags(response http.ResponseWriter, request *http.Request) {
 	if staticServer.tagsFile == "" || !fileExists(staticServer.tagsFile) {
 		writeJSON(response, http.StatusNotFound, map[string]string{
@@ -279,6 +303,8 @@ func (staticServer *StaticServer) handleTags(response http.ResponseWriter, reque
 	http.ServeFile(response, request, staticServer.tagsFile)
 }
 
+// 指定したステータスコードとペイロードをJSON形式でレスポンスに書き込む共通ヘルパー。
+// Content-Type ヘッダーを設定し、payload をエンコードして返す。
 func writeJSON(response http.ResponseWriter, statusCode int, payload any) {
 	response.Header().Set("Content-Type", "application/json")
 	response.WriteHeader(statusCode)
@@ -286,6 +312,8 @@ func writeJSON(response http.ResponseWriter, statusCode int, payload any) {
 	_ = json.NewEncoder(response).Encode(payload)
 }
 
+// 指定ポートに対し、LAN内端末からアクセス可能なURL一覧を構築する。
+// 候補となるIPv4アドレスを収集し、それぞれを http://IP:ポート 形式に整形して重複を除いて返す。
 func buildAccessURLs(port int) []string {
 	urls := []string{}
 	ipAddresses := collectCandidateIPv4s()
@@ -296,6 +324,11 @@ func buildAccessURLs(port int) []string {
 	return dedupeStrings(urls)
 }
 
+// はアクセスURLに使うIPv4アドレス候補を収集して返す。
+// 稼働中かつ非ループバックのネットワークインターフェースを走査し、
+// プライベートIPや Tailscale 経由のアドレスのみを対象とする。
+// インターフェース種別に応じたスコアで並べ替え（Tailscale を最優先、次に有線/無線）、
+// アクセスに使いやすい順序で重複を除いたアドレス一覧を返す。
 func collectCandidateIPv4s() []string {
 	interfaces, err := net.Interfaces()
 	if err != nil {
@@ -355,6 +388,9 @@ func collectCandidateIPv4s() []string {
 	return dedupeStrings(result)
 }
 
+// 指定IPがアクセスURLの対象として妥当かを判定する。
+// Tailscale / utun インターフェースの場合は CGNAT 帯(100.64.0.0/10)も含めて許可し、
+// それ以外のインターフェースではプライベートIPのみを対象とする。
 func isTargetIP(ip net.IP, interfaceName string) bool {
 	if ip == nil {
 		return false
@@ -368,6 +404,8 @@ func isTargetIP(ip net.IP, interfaceName string) bool {
 	return isPrivateIP(ip)
 }
 
+// インターフェース名から並べ替え用の優先度スコアを返す（小さいほど優先）。
+// Tailscale / utun を 0（最優先）、有線・無線(en/wi-fi/ethernet)を 1、それ以外を 2 とする。
 func interfaceScore(interfaceName string) int {
 	interfaceNameLower := strings.ToLower(interfaceName)
 
@@ -382,6 +420,8 @@ func interfaceScore(interfaceName string) int {
 	return 2
 }
 
+// 指定IPがプライベートIPアドレス帯
+// (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16) に属するかを判定する。
 func isPrivateIP(ip net.IP) bool {
 	if ip == nil {
 		return false
@@ -405,6 +445,8 @@ func isPrivateIP(ip net.IP) bool {
 	return false
 }
 
+// 指定IPがキャリアグレードNAT帯(100.64.0.0/10)に属するかを判定する。
+// Tailscale が割り当てるアドレスの判別に使う。
 func isCarrierGradeNAT(ip net.IP) bool {
 	if ip == nil {
 		return false
@@ -415,6 +457,8 @@ func isCarrierGradeNAT(ip net.IP) bool {
 	return first == 100 && second >= 64 && second <= 127
 }
 
+// 文字列スライスから空文字列と重複を除き、
+// 出現順を保ったまま一意な値のスライスを返すヘルパー。
 func dedupeStrings(values []string) []string {
 	seen := map[string]bool{}
 	result := make([]string, 0, len(values))
