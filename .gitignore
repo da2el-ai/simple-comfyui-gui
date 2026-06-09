@@ -3,8 +3,10 @@ runtime/*
 !runtime/selector/**
 !runtime/workflow/
 !runtime/workflow/**
+!runtime/version.txt
 frontend/dist
 frontend/node_modules
+CLAUDE.md
 .claude
 .claude-finished
 

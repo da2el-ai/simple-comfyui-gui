@@ -24,6 +24,7 @@ type StaticServer struct {
 	frontendDir string
 	workflowDir string
 	tagsFile    string
+	versionFile string
 	selectorDir string
 	localURL    string
 	accessURLs  []string
@@ -34,7 +35,7 @@ func NewStaticServer() *StaticServer {
 }
 
 func (staticServer *StaticServer) Start() error {
-	frontendDir, workflowDir, tagsFile, err := resolveStaticDirs()
+	frontendDir, workflowDir, tagsFile, versionFile, err := resolveStaticDirs()
 	if err != nil {
 		return err
 	}
@@ -42,10 +43,12 @@ func (staticServer *StaticServer) Start() error {
 	staticServer.frontendDir = frontendDir
 	staticServer.workflowDir = workflowDir
 	staticServer.tagsFile = tagsFile
+	staticServer.versionFile = versionFile
 	staticServer.selectorDir = resolveSelectorDir()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/comfyui_endpoint", staticServer.handleComfyUIEndpoint)
+	mux.HandleFunc("/api/version", staticServer.handleVersion)
 	mux.HandleFunc("/api/object_info", staticServer.handleObjectInfo)
 	mux.HandleFunc("/api/workflows", staticServer.handleWorkflows)
 	mux.HandleFunc("/api/tags", staticServer.handleTags)
@@ -105,6 +108,22 @@ func (staticServer *StaticServer) TagsFilePath() string {
 	return staticServer.tagsFile
 }
 
+// Version は version.txt を読み込み、前後の空白・改行を除いたバージョン文字列を返す。
+// ファイルが無い／読めない場合は空文字列を返し、呼び出し側でフォールバックする。
+// 実行時にファイルを読むため、再ビルドなしでバージョン表示を更新できる。
+func (staticServer *StaticServer) Version() string {
+	if staticServer.versionFile == "" {
+		return ""
+	}
+
+	content, err := os.ReadFile(staticServer.versionFile)
+	if err != nil {
+		return ""
+	}
+
+	return strings.TrimSpace(string(content))
+}
+
 func newFrontendHandler(frontendDir string) http.Handler {
 	fileServer := http.FileServer(http.Dir(frontendDir))
 
@@ -139,10 +158,10 @@ func newWorkflowHandler(workflowDir string) http.Handler {
 // 各階層で直下 (frontend/workflow) と runtime 配下 (runtime/frontend, runtime/workflow) の
 // 両パターンを確認する。開発時とビルド後で配置が異なるケースに対応するための探索処理。
 // 見つからない場合は探索したパス一覧を含むエラーを返す。
-func resolveStaticDirs() (string, string, string, error) {
+func resolveStaticDirs() (string, string, string, string, error) {
 	executablePath, err := os.Executable()
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", "", err
 	}
 
 	executableDir := filepath.Dir(executablePath)
@@ -158,18 +177,35 @@ func resolveStaticDirs() (string, string, string, error) {
 		directWorkflow := filepath.Join(ancestorDir, "workflow")
 		checkedPaths = append(checkedPaths, directFrontend, directWorkflow)
 		if directoryExists(directFrontend) && directoryExists(directWorkflow) {
-			return directFrontend, directWorkflow, resolveTagsFile(ancestorDir), nil
+			return directFrontend, directWorkflow, resolveTagsFile(ancestorDir), resolveVersionFile(ancestorDir), nil
 		}
 
 		runtimeFrontend := filepath.Join(ancestorDir, "runtime", "frontend")
 		runtimeWorkflow := filepath.Join(ancestorDir, "runtime", "workflow")
 		checkedPaths = append(checkedPaths, runtimeFrontend, runtimeWorkflow)
 		if directoryExists(runtimeFrontend) && directoryExists(runtimeWorkflow) {
-			return runtimeFrontend, runtimeWorkflow, resolveTagsFile(ancestorDir), nil
+			return runtimeFrontend, runtimeWorkflow, resolveTagsFile(ancestorDir), resolveVersionFile(ancestorDir), nil
 		}
 	}
 
-	return "", "", "", errors.New("frontend/workflow の配置が見つかりません。探索パス: " + strings.Join(checkedPaths, ", "))
+	return "", "", "", "", errors.New("frontend/workflow の配置が見つかりません。探索パス: " + strings.Join(checkedPaths, ", "))
+}
+
+// 指定階層を基準にバージョン情報ファイル version.txt のパスを解決する。
+// 直下 (version.txt) と runtime 配下 (runtime/version.txt) を順に確認し、
+// 実ファイルがあればそのパスを返す。いずれも無ければ runtime 配下のパスを既定値として返す。
+func resolveVersionFile(ancestorDir string) string {
+	directVersionFile := filepath.Join(ancestorDir, "version.txt")
+	if fileExists(directVersionFile) {
+		return directVersionFile
+	}
+
+	runtimeVersionFile := filepath.Join(ancestorDir, "runtime", "version.txt")
+	if fileExists(runtimeVersionFile) {
+		return runtimeVersionFile
+	}
+
+	return runtimeVersionFile
 }
 
 // 指定階層を基準にオートコンプリート用タグCSVのパスを解決する。
@@ -259,6 +295,15 @@ func (staticServer *StaticServer) handleComfyUIEndpoint(response http.ResponseWr
 
 	writeJSON(response, http.StatusOK, map[string]string{
 		"endpoint": loadedConfig.ComfyUIURL,
+	})
+}
+
+// handleVersion は version.txt のバージョン文字列をJSONで返すAPIハンドラ。
+// フロントエンドがページ最下部にバージョンを表示するために使う。
+// ファイルが無い場合は空文字列を返す（フロント側でバージョン表記を省略する）。
+func (staticServer *StaticServer) handleVersion(response http.ResponseWriter, _ *http.Request) {
+	writeJSON(response, http.StatusOK, map[string]string{
+		"version": staticServer.Version(),
 	})
 }
 

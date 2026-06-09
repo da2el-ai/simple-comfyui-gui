@@ -16,7 +16,7 @@ func main() {
 	application := NewApp()
 
 	err := wails.Run(&options.App{
-		Title:  "Simple ComfyUI GUI",
+		Title:  appDisplayName,
 		Width:  520,
 		Height: 360,
 		AssetServer: &assetserver.Options{

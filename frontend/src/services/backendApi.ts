@@ -10,6 +10,7 @@ import type {
   SelectorAllData,
   SelectorDeleteRequest,
   SelectorEditRequest,
+  VersionResponse,
   WorkflowData,
   WorkflowName,
   WorkflowsResponse
@@ -39,6 +40,12 @@ async function getJson<T>(path: string): Promise<T> {
 export async function fetchComfyUIEndpoint(): Promise<string> {
   const data = await getJson<ComfyUIEndpointResponse>('/api/comfyui_endpoint')
   return data.endpoint
+}
+
+/** アプリのバージョン文字列を取得する（runtime/version.txt 由来。例: "1.11.0"） */
+export async function fetchVersion(): Promise<string> {
+  const data = await getJson<VersionResponse>('/api/version')
+  return data.version
 }
 
 /** ワークフロー名一覧を取得する */

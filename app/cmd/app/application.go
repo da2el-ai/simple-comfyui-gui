@@ -15,11 +15,16 @@ import (
 
 	"github.com/pkg/browser"
 	qrcode "github.com/skip2/go-qrcode"
+	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 
 	"simple-comfyui-gui/app/internal/comfyui"
 	"simple-comfyui-gui/app/internal/config"
 	"simple-comfyui-gui/app/internal/server"
 )
+
+// appDisplayName はウィンドウタイトル等に表示するアプリ名。
+// バージョンは runtime/version.txt から実行時に読み込み、" v" + バージョンを連結して表示する。
+const appDisplayName = "Simple ComfyUI GUI"
 
 type App struct {
 	ctx            context.Context
@@ -72,6 +77,14 @@ func (application *App) startup(ctx context.Context) {
 
 	application.frontendURL = application.staticServer.URL()
 	application.accessURLs = application.staticServer.AccessURLs()
+
+	// version.txt のバージョンをタイトルバーに反映する（例: "Simple ComfyUI GUI v1.11.0"）。
+	// ファイルが無い場合はアプリ名のみとする。
+	title := appDisplayName
+	if version := application.staticServer.Version(); version != "" {
+		title = appDisplayName + " v" + version
+	}
+	wailsruntime.WindowSetTitle(ctx, title)
 }
 
 func (application *App) shutdown(_ context.Context) {

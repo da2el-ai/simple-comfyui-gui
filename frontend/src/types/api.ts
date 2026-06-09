@@ -6,6 +6,10 @@ export type ComfyUIEndpointResponse = {
   endpoint: string
 }
 
+export type VersionResponse = {
+  version: string
+}
+
 export type DynamicInputType =
   | 'list'
   | 'text'
