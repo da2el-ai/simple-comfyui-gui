@@ -6,7 +6,8 @@ import type {
   TDynamicInputItem,
   WorkflowConfig,
   WorkflowConfigOptionalItem,
-  WorkflowData
+  WorkflowData,
+  WorkflowNode
 } from '../types/api'
 import {
   fetchComfyObjectInfo,
@@ -99,6 +100,13 @@ export function useGenerateSettings() {
     const parsedConfig = yaml.load(configText)
     if (!isWorkflowConfig(parsedConfig)) {
       throw new Error('workflow設定の形式が不正です')
+    }
+
+    if (!isApiFormatWorkflow(workflowJson)) {
+      throw new Error(
+        `ワークフロー「${workflowName}」がAPI形式ではありません。` +
+          'ComfyUIで「API形式で保存（Save (API Format)）」してから配置してください。'
+      )
     }
 
     workflowConfig.value = parsedConfig
@@ -317,6 +325,38 @@ export function useGenerateSettings() {
 
     const config = value as Partial<WorkflowConfig>
     return Array.isArray(config.required) && Array.isArray(config.optional)
+  }
+
+  /**
+   * ワークフローJSONがComfyUIのAPI形式かどうかを判定する。
+   * グラフ（通常保存）形式は nodes/links 配列を持ち、各値がノード辞書ではないため除外する。
+   * @param value 検証対象のワークフローJSON。
+   * @returns ノードIDをキーにした辞書（API形式）ならtrue。
+   */
+  function isApiFormatWorkflow(value: unknown): value is WorkflowData {
+    if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+      return false
+    }
+
+    // グラフ（UI）形式の特徴キーを持つ場合はAPI形式ではない
+    const graphLike = value as Record<string, unknown>
+    if (Array.isArray(graphLike.nodes) || Array.isArray(graphLike.links)) {
+      return false
+    }
+
+    const entries = Object.entries(value as Record<string, unknown>)
+    if (entries.length === 0) {
+      return false
+    }
+
+    // 全エントリがノード辞書（class_type または inputs を持つオブジェクト）であること
+    return entries.every(([, node]) => {
+      if (node == null || typeof node !== 'object' || Array.isArray(node)) {
+        return false
+      }
+      const candidate = node as Partial<WorkflowNode>
+      return typeof candidate.class_type === 'string' || candidate.inputs != null
+    })
   }
 
   return {
