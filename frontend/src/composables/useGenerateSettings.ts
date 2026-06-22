@@ -214,12 +214,41 @@ export function useGenerateSettings() {
       return []
     }
 
-    const resolved = getNestedValue(info, item.input.value)
-    if (!Array.isArray(resolved)) {
+    // YAMLのvalueパスは末尾にインデックス(0)を含み、旧形式のCOMBO定義先頭要素（選択肢配列）を指す。
+    // ComfyUI新形式では先頭要素が "COMBO" 文字列に変わったため、末尾インデックスを外して
+    // COMBO定義（配列）そのものを取得し、新旧どちらの形式からも選択肢を抽出する。
+    const path = item.input.value
+    const comboPath = typeof path[path.length - 1] === 'number' ? path.slice(0, -1) : path
+    return extractComboOptions(getNestedValue(info, comboPath))
+  }
+
+  /**
+   * ComfyUIのCOMBO入力定義から選択肢一覧を抽出する。新旧両形式に対応する。
+   * - 旧形式: [ [選択肢配列], {metadata} ]
+   * - 新形式: [ "COMBO", { options: [選択肢配列], ... } ]
+   * @param comboDef object_info上のCOMBO入力定義（input.required.<name> の値）。
+   * @returns 選択肢文字列の配列。形式が一致しなければ空配列。
+   */
+  function extractComboOptions(comboDef: unknown): string[] {
+    if (!Array.isArray(comboDef)) {
       return []
     }
 
-    return resolved.map((entry) => String(entry))
+    // 旧形式: 先頭要素が選択肢配列
+    if (Array.isArray(comboDef[0])) {
+      return comboDef[0].map((entry) => String(entry))
+    }
+
+    // 新形式: メタデータ側の options が選択肢配列
+    const meta = comboDef[1]
+    if (meta != null && typeof meta === 'object') {
+      const options = (meta as Record<string, unknown>).options
+      if (Array.isArray(options)) {
+        return options.map((entry) => String(entry))
+      }
+    }
+
+    return []
   }
 
   /**
@@ -264,17 +293,9 @@ export function useGenerateSettings() {
    * @returns チェックポイント名の配列。
    */
   function extractCheckpointList(info: ComfyObjectInfo | null): string[] {
-    const value = getNestedValue(info, [
-      'D2 Checkpoint Loader',
-      'input',
-      'required',
-      'ckpt_name',
-      0
-    ])
-    if (!Array.isArray(value)) {
-      return []
-    }
-    return value.map((entry) => String(entry))
+    return extractComboOptions(
+      getNestedValue(info, ['D2 Checkpoint Loader', 'input', 'required', 'ckpt_name'])
+    )
   }
 
   /**
@@ -283,17 +304,9 @@ export function useGenerateSettings() {
    * @returns LoRA名の配列。
    */
   function extractLoraList(info: ComfyObjectInfo | null): string[] {
-    const value = getNestedValue(info, [
-      'LoraLoader',
-      'input',
-      'required',
-      'lora_name',
-      0
-    ])
-    if (!Array.isArray(value)) {
-      return []
-    }
-    return value.map((entry) => String(entry))
+    return extractComboOptions(
+      getNestedValue(info, ['LoraLoader', 'input', 'required', 'lora_name'])
+    )
   }
 
   /**
