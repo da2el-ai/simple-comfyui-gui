@@ -12,6 +12,7 @@ export type VersionResponse = {
 
 export type DynamicInputType =
   | 'list'
+  | 'search'
   | 'text'
   | 'prompt'
   | 'number'

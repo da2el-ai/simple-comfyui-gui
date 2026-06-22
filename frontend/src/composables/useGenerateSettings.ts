@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import yaml from 'js-yaml'
 import type {
   ComfyObjectInfo,
+  DynamicInputType,
   DynamicInputValue,
   TDynamicInputItem,
   WorkflowConfig,
@@ -124,7 +125,7 @@ export function useGenerateSettings() {
 
         const saved = savedValues[item.id]
         if (saved === undefined) continue
-        if (item.type === 'list') {
+        if (isListLikeType(item.type)) {
           if (item.options.includes(String(saved))) item.value = String(saved)
         } else if (item.type === 'number') {
           if (typeof saved === 'number') item.value = saved
@@ -206,11 +207,21 @@ export function useGenerateSettings() {
    * @param info ComfyUIのobject_info。
    * @returns 候補値文字列の配列。
    */
+  /**
+   * object_infoの選択肢一覧を必要とする「リスト系」入力型かどうかを判定する。
+   * list（ドロップダウン）と search（検索付きセレクター）が該当する。
+   * @param type 判定する入力型。
+   * @returns リスト系ならtrue。
+   */
+  function isListLikeType(type: DynamicInputType): boolean {
+    return type === 'list' || type === 'search'
+  }
+
   function resolveListOptions(
     item: WorkflowConfigOptionalItem,
     info: ComfyObjectInfo | null
   ): string[] {
-    if (item.input.type !== 'list' || !Array.isArray(item.input.value)) {
+    if (!isListLikeType(item.input.type) || !Array.isArray(item.input.value)) {
       return []
     }
 
@@ -269,7 +280,7 @@ export function useGenerateSettings() {
       return Math.floor(Math.random() * 1_000_000_000)
     }
 
-    if (item.input.type === 'list') {
+    if (isListLikeType(item.input.type)) {
       if (typeof item.input.default === 'string' && options.includes(item.input.default)) {
         return item.input.default
       }

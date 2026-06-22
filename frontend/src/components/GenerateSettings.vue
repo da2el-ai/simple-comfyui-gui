@@ -566,7 +566,7 @@ function startAutoSave(): void {
 
         <div v-if="showCheckpointSetting" class="w-full">
           <label class="block text-sm font-medium mb-1">Checkpoint</label>
-          <CheckpointSelector v-model="currentCheckpoint" :checkpoint-list="checkpointList" />
+          <CheckpointSelector v-model="currentCheckpoint" :options="checkpointList" placeholder="Checkpoint を選択..." />
         </div>
 
         <!-- 以下 OptionalItems -->

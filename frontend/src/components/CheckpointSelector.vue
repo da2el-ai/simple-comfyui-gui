@@ -2,9 +2,13 @@
 import { ref } from 'vue'
 import SearchListDialog from './SearchListDialog.vue'
 
+// 検索付きリスト選択コンポーネント。
+// Checkpoint に限らず、Diffusion Model など任意のローダー系リスト入力で汎用的に使う
+// （DynamicInput の type: search から呼び出される）。
 const props = defineProps<{
-  checkpointList: string[]
+  options: string[]
   modelValue: string
+  placeholder?: string
 }>()
 
 const emit = defineEmits<{
@@ -22,8 +26,8 @@ function openDialog(): void {
   dialogRef.value?.open()
 }
 
-function selectCheckpoint(cp: string): void {
-  emit('update:modelValue', cp)
+function selectItem(item: string): void {
+  emit('update:modelValue', item)
 }
 </script>
 
@@ -32,7 +36,7 @@ function selectCheckpoint(cp: string): void {
     <!-- トリガーボタン：現在の選択を表示 -->
     <button type="button" class="cp-trigger" @click="openDialog">
       <span class="cp-trigger-label">
-        {{ props.modelValue ? displayName(props.modelValue) : 'Checkpoint を選択...' }}
+        {{ props.modelValue ? displayName(props.modelValue) : (props.placeholder ?? '選択...') }}
       </span>
       <span class="cp-trigger-icon">▾</span>
     </button>
@@ -40,10 +44,10 @@ function selectCheckpoint(cp: string): void {
     <!-- モーダルダイアログ -->
     <SearchListDialog
       ref="dialogRef"
-      :items="checkpointList"
+      :items="options"
       :selected-value="modelValue"
-      empty-message="一致するチェックポイントが見つかりません"
-      @select="selectCheckpoint"
+      empty-message="一致する項目が見つかりません"
+      @select="selectItem"
     >
       <template #item="{ item }">{{ displayName(item) }}</template>
     </SearchListDialog>

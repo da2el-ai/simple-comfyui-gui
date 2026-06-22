@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import DynamicInputImage from './DynamicInputImage.vue'
 import PromptInput from './PromptInput.vue'
+import CheckpointSelector from './CheckpointSelector.vue'
 import type { DynamicInputType, DynamicInputValue } from '../types/api'
 
 
@@ -34,6 +35,14 @@ const emit = defineEmits<{
     >
       <option v-for="option in props.options" :key="option" :value="option">{{ option }}</option>
     </select>
+
+    <CheckpointSelector
+      v-if="props.type === 'search' && props.options"
+      :options="props.options"
+      :model-value="String(props.value)"
+      :placeholder="`${props.title} を選択...`"
+      @update:modelValue="emit('update:value', $event)"
+    />
 
     <input
       v-if="props.type === 'text'"
