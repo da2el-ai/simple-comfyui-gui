@@ -78,6 +78,15 @@ const emit = defineEmits<{
       <!-- <span class="text-sm">有効</span> -->
     </label>
 
+    <label v-if="props.type === 'boolean'" class="">
+      <input
+        type="checkbox"
+        class="toggle"
+        :checked="Boolean(props.value)"
+        @change="emit('update:value', ($event.target as HTMLInputElement).checked)"
+      />
+    </label>
+
     <PromptInput
       v-if="props.type === 'prompt'"
       :model-value="props.value as string"

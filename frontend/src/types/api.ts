@@ -20,6 +20,7 @@ export type DynamicInputType =
   | 'image'
   | 'seed'
   | 'switch'
+  | 'boolean'
 
 export type DynamicInputValue = string | number | boolean
 

@@ -129,7 +129,7 @@ export function useGenerateSettings() {
           if (item.options.includes(String(saved))) item.value = String(saved)
         } else if (item.type === 'number') {
           if (typeof saved === 'number') item.value = saved
-        } else if (item.type === 'switch') {
+        } else if (item.type === 'switch' || item.type === 'boolean') {
           if (typeof saved === 'boolean') item.value = saved
         } else {
           item.value = saved
@@ -293,6 +293,10 @@ export function useGenerateSettings() {
 
     if (item.input.type === 'switch') {
       return typeof item.input.default === 'boolean' ? item.input.default : true
+    }
+
+    if (item.input.type === 'boolean') {
+      return typeof item.input.default === 'boolean' ? item.input.default : false
     }
 
     return typeof item.input.default === 'string' ? item.input.default : ''

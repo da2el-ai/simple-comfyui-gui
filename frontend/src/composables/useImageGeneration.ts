@@ -133,7 +133,9 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
    * @param optionalValueMap optional項目IDと値のマップ。
    * @returns 送信用に複製・更新されたワークフローデータ。
    */
-  function buildPromptWorkflow(optionalValueMap: Record<string, string | number>): WorkflowData {
+  function buildPromptWorkflow(
+    optionalValueMap: Record<string, string | number | boolean>
+  ): WorkflowData {
     const { workflowData } = deps
     if (!workflowData.value) {
       throw new Error('workflowデータが未初期化です')
@@ -165,12 +167,18 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
    * seed型は毎回ランダム値に置き換え、空文字は除外する。
    * @returns optional項目IDと値のマップ。
    */
-  async function buildOptionalValueMap(): Promise<Record<string, string | number>> {
-    const valueMap: Record<string, string | number> = {}
+  async function buildOptionalValueMap(): Promise<Record<string, string | number | boolean>> {
+    const valueMap: Record<string, string | number | boolean> = {}
 
     for (const item of deps.optionalItems.value) {
       if (item.type === 'seed') {
         valueMap[item.id] = Math.floor(Math.random() * 1_000_000_000)
+        continue
+      }
+
+      // boolean型はノード入力へ真偽値をそのまま反映する
+      if (item.type === 'boolean') {
+        valueMap[item.id] = Boolean(item.value)
         continue
       }
 
@@ -223,7 +231,7 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     workflow: WorkflowData,
     category: 'required' | 'optional',
     itemId: string,
-    value: string | number
+    value: string | number | boolean
   ): void {
     if (typeof value === 'string' && value === '') {
       return
