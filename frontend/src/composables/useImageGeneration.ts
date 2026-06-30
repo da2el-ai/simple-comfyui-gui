@@ -43,6 +43,8 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
   const previewImages = ref<string[]>([])
   // 現在監視中の prompt_id リスト（キャンセル時に参照する）
   const activePromptIds = ref<string[]>([])
+  // デバッグ用: 最後にComfyUIへ送信したワークフロー
+  const lastSentWorkflow = ref<WorkflowData | null>(null)
 
   /**
    * 画像生成を実行し、投入した全プロンプトの完了を監視する。
@@ -71,7 +73,8 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
       for (let index = 0; index < effectiveBatchCount; index += 1) {
         const resolvedOptionalValueMap = await buildOptionalValueMap()
         const promptWorkflow = buildPromptWorkflow(resolvedOptionalValueMap)
-        // console.log("promptWorkflow", promptWorkflow)
+        // デバッグパネル用に送信直前のワークフローを保持する
+        lastSentWorkflow.value = promptWorkflow
         const response = await submitPrompt(endpoint.value, promptWorkflow)
         promptIds.push(response.prompt_id)
         queueCount.value = promptIds.length
@@ -540,6 +543,7 @@ export function useImageGeneration(deps: ImageGenerationDeps) {
     errorMessage,
     queueCount,
     previewImages,
+    lastSentWorkflow,
     generateImages,
     cancelGeneration,
     clearPreview

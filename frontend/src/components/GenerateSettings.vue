@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import DynamicInput from './DynamicInput.vue'
+import DebugPanel from './DebugPanel.vue'
 import MaskEditor from './MaskEditor.vue'
 // import WeightButtons from './WeightButtons.vue'
 import ImagePreview from './ImagePreview.vue'
@@ -60,6 +61,7 @@ const {
   generationMessage,
   queueCount,
   previewImages,
+  lastSentWorkflow,
   generateImages,
   cancelGeneration,
   clearPreview
@@ -604,6 +606,9 @@ function startAutoSave(): void {
       </div>
     </details>
   </section>
+
+  <!-- デバッグパネル（#generate-settings と footer の間） -->
+  <DebugPanel :workflow="lastSentWorkflow" />
 </template>
 
 <style scoped>
